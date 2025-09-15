@@ -222,12 +222,18 @@ build-java: ## Java 서버 이미지만 빌드
 build-go: ## Go 서버 이미지만 빌드
 	docker-compose build go-server
 
-# ===== 테스트 실행 =====
+# ===== 간단한 테스트 실행 =====
 
-test: ## 기본 테스트 실행
-	@echo "$(CYAN)🧪 기본 테스트 실행 중...$(RESET)"
-	@make test-health
-	@make test-api
+test: ## 간단한 API 테스트 실행 (PHPUnit 없이)
+	@echo "$(CYAN)🧪 간단한 API 테스트 실행 중...$(RESET)"
+	@./scripts/test-api.sh
+
+smoke-test: ## 연기 테스트 (기본 동작 확인)
+	@echo "$(CYAN)💨 연기 테스트 실행 중...$(RESET)"
+	@./scripts/smoke-test.sh
+
+test-quick: ## 빠른 테스트 (연기 테스트)
+	@make smoke-test
 
 test-all: ## 모든 언어에서 전체 테스트 실행
 	@echo "$(CYAN)🧪 전체 테스트 스위트 실행 중...$(RESET)"

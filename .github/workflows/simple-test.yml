@@ -1,0 +1,78 @@
+name: 🧪 간단한 API 테스트
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    name: 💨 연기 테스트 (기본 동작 확인)
+    
+    steps:
+    - name: 📥 코드 체크아웃
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: 🐳 Docker Compose 설치
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+
+    - name: 🚀 서비스 시작
+      run: |
+        cp .env.example .env
+        docker-compose up -d
+        sleep 30  # 서비스가 완전히 시작될 때까지 대기
+
+    - name: 🔍 컨테이너 상태 확인
+      run: |
+        docker-compose ps
+        docker-compose logs
+
+    - name: 💨 연기 테스트 실행
+      run: |
+        chmod +x scripts/smoke-test.sh
+        ./scripts/smoke-test.sh
+
+    - name: 🧪 API 테스트 실행 (기본)
+      run: |
+        # 기본 헬스체크만 실행 (복잡한 테스트 제외)
+        curl -f http://localhost:8080/health
+        curl -f http://localhost:8080/
+
+    - name: 🛑 서비스 정리
+      if: always()
+      run: |
+        docker-compose down -v
+        docker system prune -f
+
+  security-check:
+    runs-on: ubuntu-latest
+    name: 🔒 기본 보안 체크
+    
+    steps:
+    - name: 📥 코드 체크아웃
+      uses: actions/checkout@v4
+
+    - name: 🔍 Docker 이미지 보안 스캔
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        exit-code: '0'  # 경고만 표시, 실패하지 않음
+
+    - name: 📋 하드코딩된 시크릿 검사
+      run: |
+        # 간단한 패턴 검사 (완벽하지 않지만 기본적인 체크)
+        if grep -r "password.*=" . --include="*.php" --include="*.js" --include="*.py" | grep -v "example\|test\|demo"; then
+          echo "⚠️ 하드코딩된 패스워드 발견 가능성"
+        fi
+        
+        if grep -r "api_key.*=" . --include="*.php" --include="*.js" --include="*.py" | grep -v "example\|test\|demo"; then
+          echo "⚠️ 하드코딩된 API 키 발견 가능성"
+        fi
