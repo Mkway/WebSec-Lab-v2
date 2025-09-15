@@ -1,0 +1,52 @@
+# Web Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+Werkzeug==2.3.7
+
+# Database
+PyMySQL==1.1.0
+psycopg2-binary==2.9.7
+pymongo==4.5.0
+redis==4.6.0
+SQLAlchemy==2.0.21
+
+# Security & Authentication
+bcrypt==4.0.1
+PyJWT==2.8.0
+cryptography==41.0.4
+
+# HTTP & API
+requests==2.31.0
+urllib3==2.0.4
+
+# Serialization & Validation
+marshmallow==3.20.1
+pydantic==2.3.0
+
+# Template Engines (for SSTI testing)
+Jinja2==3.1.2
+Mako==1.2.4
+
+# Pickle & Serialization (for deserialization testing)
+pickle5==0.0.12
+dill==0.3.7
+
+# XML Processing (for XXE testing)
+lxml==4.9.3
+defusedxml==0.7.1
+
+# Development & Testing
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
+# Logging & Monitoring
+structlog==23.1.0
+
+# Vulnerability Testing Libraries
+PyYAML==6.0.1
+pillow==10.0.0
+
+# Code Analysis
+bandit==1.7.5

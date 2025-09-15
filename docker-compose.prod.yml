@@ -1,0 +1,287 @@
+version: '3.8'
+
+services:
+  # ===== 프로덕션 환경 Nginx 리버스 프록시 =====
+  nginx:
+    image: nginx:alpine
+    container_name: websec-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - dashboard
+      - php-server
+      - nodejs-server
+      - python-server
+      - java-server
+      - go-server
+    networks:
+      - websec-network
+    restart: unless-stopped
+
+  # ===== 프로덕션 환경 대시보드 오버라이드 =====
+  dashboard:
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    volumes:
+      - ./dashboard:/var/www/html:ro
+      - ./shared:/var/shared:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ===== 프로덕션 환경 언어별 서버 오버라이드 =====
+  php-server:
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    volumes:
+      - ./servers/php-server:/var/www/html:ro
+      - ./shared:/var/shared:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'
+          memory: 512M
+        reservations:
+          cpus: '0.4'
+          memory: 256M
+
+  nodejs-server:
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./servers/nodejs-server:/app:ro
+      - ./shared:/var/shared:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'
+          memory: 512M
+        reservations:
+          cpus: '0.4'
+          memory: 256M
+
+  python-server:
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+    volumes:
+      - ./servers/python-server:/app:ro
+      - ./shared:/var/shared:rw
+    command: >
+      sh -c "
+        gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 app:app
+      "
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'
+          memory: 512M
+        reservations:
+          cpus: '0.4'
+          memory: 256M
+
+  java-server:
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - JAVA_OPTS=-Xms256m -Xmx512m -server
+    volumes:
+      - ./servers/java-server:/app:ro
+      - ./shared:/var/shared:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+        reservations:
+          cpus: '0.5'
+          memory: 384M
+
+  go-server:
+    environment:
+      - GIN_MODE=release
+    volumes:
+      - ./servers/go-server:/app:ro
+      - ./shared:/var/shared:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: 256M
+        reservations:
+          cpus: '0.3'
+          memory: 128M
+
+  # ===== 데이터베이스 프로덕션 최적화 =====
+  mysql:
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --innodb-buffer-pool-size=512M
+      --innodb-log-file-size=128M
+      --max-connections=200
+      --query-cache-size=64M
+      --query-cache-type=1
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  postgres:
+    command: >
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  mongodb:
+    command: --wiredTigerCacheSizeGB 0.5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    command: >
+      redis-server --requirepass redis123
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ===== 모니터링 서비스 =====
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: websec-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - websec-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: websec-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - websec-network
+    restart: unless-stopped
+
+  # ===== 로그 집계 =====
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: websec-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - websec-network
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: websec-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - websec-network
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.8.0
+    container_name: websec-logstash
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./monitoring/logstash/config:/usr/share/logstash/config:ro
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    environment:
+      - "LS_JAVA_OPTS=-Xms256m -Xmx512m"
+    depends_on:
+      - elasticsearch
+    networks:
+      - websec-network
+    restart: unless-stopped
+
+# ===== 프로덕션 전용 볼륨 =====
+volumes:
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  websec-network:
+    external: true
