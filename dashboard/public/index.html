@@ -6,6 +6,10 @@
     <title>WebSec-Lab v2 - 통합 대시보드</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Prism.js for Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/diff-highlight/prism-diff-highlight.min.css" rel="stylesheet">
     <link href="../assets/css/dashboard.css" rel="stylesheet">
 </head>
 <body>
@@ -208,11 +212,35 @@
 
                                         <!-- PHP Source Code -->
                                         <div class="code-section">
-                                            <h6><i class="fas fa-code"></i> PHP 소스 코드</h6>
-                                            <div class="code-block vulnerable">
-                                                echo $_GET['input'];<br>
-                                                <span class="text-muted">// 사용자 입력을 필터링 없이 그대로 출력</span><br>
-                                                <span class="text-danger">// ⚠️ XSS 취약점 존재!</span>
+                                            <h6>
+                                                <i class="fas fa-code"></i> PHP 소스 코드
+                                                <span class="badge bg-danger ms-2">취약함</span>
+                                                <span class="info-tooltip">
+                                                    <i class="fas fa-question-circle"></i>
+                                                    <span class="tooltip-text">사용자 입력을 필터링 없이 출력하는 위험한 코드</span>
+                                                </span>
+                                            </h6>
+                                            <pre class="line-numbers code-block vulnerable"><code class="language-php"><?php
+// 취약한 코드 - XSS 공격에 노출
+echo $_GET['input']; // 사용자 입력을 필터링 없이 그대로 출력
+
+// ⚠️ 문제점:
+// 1. 입력 검증 없음
+// 2. HTML 인코딩 없음
+// 3. XSS 공격 가능
+?></code></pre>
+
+                                            <div class="code-explanation">
+                                                <div class="explanation-item">
+                                                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                                                    <strong>위험 요소:</strong>
+                                                    <code>$_GET['input']</code>을 검증 없이 직접 출력
+                                                </div>
+                                                <div class="explanation-item">
+                                                    <i class="fas fa-bug text-danger"></i>
+                                                    <strong>공격 가능성:</strong>
+                                                    악성 스크립트가 그대로 실행됨
+                                                </div>
                                             </div>
                                         </div>
 
@@ -271,15 +299,39 @@
 
                                         <!-- PHP Source Code -->
                                         <div class="code-section">
-                                            <h6><i class="fas fa-code"></i> PHP 소스 코드</h6>
-                                            <div class="code-block safe">
-                                                echo htmlspecialchars(<br>
-                                                &nbsp;&nbsp;&nbsp;&nbsp;$_GET['input'],<br>
-                                                &nbsp;&nbsp;&nbsp;&nbsp;ENT_QUOTES,<br>
-                                                &nbsp;&nbsp;&nbsp;&nbsp;'UTF-8'<br>
-                                                );<br>
-                                                <span class="text-muted">// HTML 엔티티 인코딩으로 XSS 차단</span><br>
-                                                <span class="text-success">// ✅ 보안 조치 적용!</span>
+                                            <h6>
+                                                <i class="fas fa-shield-alt"></i> PHP 소스 코드
+                                                <span class="badge bg-success ms-2">보안됨</span>
+                                                <span class="info-tooltip">
+                                                    <i class="fas fa-question-circle"></i>
+                                                    <span class="tooltip-text">HTML 엔티티 인코딩으로 XSS를 차단하는 안전한 코드</span>
+                                                </span>
+                                            </h6>
+                                            <pre class="line-numbers code-block safe"><code class="language-php"><?php
+// 안전한 코드 - XSS 공격 차단
+echo htmlspecialchars(
+    $_GET['input'],    // 사용자 입력
+    ENT_QUOTES,        // 작은따옴표/큰따옴표 모두 인코딩
+    'UTF-8'            // UTF-8 인코딩 지정
+);
+
+// ✅ 보안 조치:
+// 1. htmlspecialchars() 함수로 HTML 인코딩
+// 2. ENT_QUOTES로 따옴표까지 보호
+// 3. 문자셋 명시로 우회 공격 방지
+?></code></pre>
+
+                                            <div class="code-explanation">
+                                                <div class="explanation-item">
+                                                    <i class="fas fa-shield-alt text-success"></i>
+                                                    <strong>보안 기능:</strong>
+                                                    <code>htmlspecialchars()</code>로 HTML 엔티티 변환
+                                                </div>
+                                                <div class="explanation-item">
+                                                    <i class="fas fa-lock text-success"></i>
+                                                    <strong>차단 원리:</strong>
+                                                    <code>&lt;script&gt;</code> → <code>&amp;lt;script&amp;gt;</code>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -315,6 +367,101 @@
                                                 <span>실행 시간</span>
                                                 <span class="analysis-value">{{ xssResult.data.result?.safe?.execution_time }}초</span>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Code Comparison Section -->
+                            <div v-if="xssResult.data" class="mt-4">
+                                <div class="card">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-code-branch"></i>
+                                            📊 코드 비교 분석
+                                            <span class="info-tooltip">
+                                                <i class="fas fa-question-circle"></i>
+                                                <span class="tooltip-text">취약한 코드와 안전한 코드의 차이점을 상세히 분석합니다</span>
+                                            </span>
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="text-danger">
+                                                    <i class="fas fa-minus-circle"></i>
+                                                    제거된 취약 요소
+                                                </h6>
+                                                <pre class="line-numbers code-diff diff-removed"><code class="language-php">// 문제가 되는 코드
+- echo $_GET['input'];
+// 직접 출력 = XSS 취약점</code></pre>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-success">
+                                                    <i class="fas fa-plus-circle"></i>
+                                                    추가된 보안 조치
+                                                </h6>
+                                                <pre class="line-numbers code-diff diff-added"><code class="language-php">// 보안이 강화된 코드
++ echo htmlspecialchars(
++     $_GET['input'],
++     ENT_QUOTES,
++     'UTF-8'
++ );
+// HTML 인코딩 = XSS 차단</code></pre>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <h6>
+                                                <i class="fas fa-lightbulb text-warning"></i>
+                                                핵심 차이점 설명
+                                            </h6>
+                                            <div class="comparison-grid">
+                                                <div class="comparison-item">
+                                                    <div class="comparison-before">
+                                                        <h6 class="text-danger">❌ 취약한 방식</h6>
+                                                        <code>$_GET['input']</code>
+                                                        <p class="mt-2 small">사용자 입력을 그대로 사용</p>
+                                                    </div>
+                                                    <div class="comparison-arrow">
+                                                        <i class="fas fa-arrow-right"></i>
+                                                    </div>
+                                                    <div class="comparison-after">
+                                                        <h6 class="text-success">✅ 안전한 방식</h6>
+                                                        <code>htmlspecialchars($_GET['input'])</code>
+                                                        <p class="mt-2 small">HTML 엔티티로 변환하여 사용</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="comparison-item">
+                                                    <div class="comparison-before">
+                                                        <h6 class="text-danger">❌ 결과</h6>
+                                                        <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+                                                        <p class="mt-2 small">악성 스크립트 실행</p>
+                                                    </div>
+                                                    <div class="comparison-arrow">
+                                                        <i class="fas fa-arrow-right"></i>
+                                                    </div>
+                                                    <div class="comparison-after">
+                                                        <h6 class="text-success">✅ 결과</h6>
+                                                        <code>&amp;lt;script&amp;gt;alert('XSS')&amp;lt;/script&amp;gt;</code>
+                                                        <p class="mt-2 small">안전한 텍스트로 표시</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4 p-3 bg-light rounded">
+                                            <h6 class="text-dark">
+                                                <i class="fas fa-graduation-cap"></i>
+                                                💡 학습 포인트
+                                            </h6>
+                                            <ul class="mb-0">
+                                                <li><strong>htmlspecialchars()</strong>: HTML 특수문자를 엔티티로 변환</li>
+                                                <li><strong>ENT_QUOTES</strong>: 작은따옴표, 큰따옴표도 함께 인코딩</li>
+                                                <li><strong>UTF-8 지정</strong>: 문자셋 공격 방지</li>
+                                                <li><strong>원칙</strong>: 사용자 입력은 반드시 검증/인코딩 후 사용</li>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
@@ -453,6 +600,13 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Prism.js for Syntax Highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/diff-highlight/prism-diff-highlight.min.js"></script>
     <script src="../assets/js/dashboard.js"></script>
 </body>
 </html>

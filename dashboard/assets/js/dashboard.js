@@ -102,6 +102,7 @@ createApp({
         this.checkServerStatus();
         this.loadServerInfo();
         this.setupMessageListener();
+        this.initializePrism();
     },
     methods: {
         selectVulnerability(type) {
@@ -220,6 +221,9 @@ createApp({
                 // 성공 알림
                 this.showSuccessAlert('🎉 XSS 보안 테스트가 완료되었습니다!');
 
+                // 코드 하이라이팅 업데이트
+                this.updateCodeHighlighting();
+
             } catch (error) {
                 console.error('❌ XSS test failed:', error);
 
@@ -265,6 +269,68 @@ createApp({
 
         delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        },
+
+        // Phase 2: Code Highlighting and Display Enhancement
+        initializePrism() {
+            // Prism.js 초기화 및 설정
+            this.$nextTick(() => {
+                if (window.Prism) {
+                    // 모든 코드 블록에 라인 넘버 추가
+                    document.querySelectorAll('pre.line-numbers').forEach(pre => {
+                        pre.classList.add('line-numbers');
+                    });
+
+                    // Prism 하이라이트 재실행
+                    Prism.highlightAll();
+
+                    // 코드 복사 버튼 추가
+                    this.addCopyButtons();
+                }
+            });
+        },
+
+        addCopyButtons() {
+            // 각 코드 섹션에 복사 버튼 추가
+            document.querySelectorAll('.code-section').forEach(section => {
+                if (!section.querySelector('.code-copy-btn')) {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'code-copy-btn';
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> 복사';
+                    copyBtn.addEventListener('click', () => {
+                        const codeElement = section.querySelector('code');
+                        if (codeElement) {
+                            this.copyCodeToClipboard(codeElement.textContent);
+                        }
+                    });
+                    section.appendChild(copyBtn);
+                }
+            });
+        },
+
+        copyCodeToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.showSuccessAlert('📋 코드가 클립보드에 복사되었습니다!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                this.showSuccessAlert('📋 코드가 클립보드에 복사되었습니다!');
+            });
+        },
+
+        updateCodeHighlighting() {
+            // 동적으로 추가된 코드 블록의 하이라이트 업데이트
+            this.$nextTick(() => {
+                if (window.Prism) {
+                    Prism.highlightAll();
+                    this.addCopyButtons();
+                }
+            });
         },
         getRiskClass(level) {
             switch (level?.toLowerCase()) {
