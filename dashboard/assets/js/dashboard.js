@@ -266,6 +266,11 @@ createApp({
                 return 'pending';
             }
         },
+        getProgressWidth() {
+            const currentIndex = this.testProgress.steps.indexOf(this.testProgress.currentStep);
+            const totalSteps = this.testProgress.steps.length - 1;
+            return Math.round((currentIndex / totalSteps) * 100);
+        },
 
         delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
@@ -412,38 +417,88 @@ createApp({
         showSuccessAlert(message) {
             const alertDiv = document.createElement('div');
             alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
-            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.style.cssText = 'top: 80px; right: 20px; z-index: 10000; min-width: 350px; max-width: 500px; box-shadow: 0 8px 32px rgba(40, 167, 69, 0.3);';
             alertDiv.innerHTML = `
-                <i class="fas fa-check-circle"></i>
-                <strong>성공!</strong><br>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-success mb-1">
+                            <i class="fas fa-sparkles"></i> 작업 성공!
+                        </div>
+                        <div class="small text-success-emphasis">
+                            ${message}
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-success" data-bs-dismiss="alert"></button>
+                </div>
             `;
             document.body.appendChild(alertDiv);
 
+            // 진입 애니메이션
+            alertDiv.style.transform = 'translateX(100%)';
+            alertDiv.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            setTimeout(() => {
+                alertDiv.style.transform = 'translateX(0)';
+            }, 10);
+
             setTimeout(() => {
                 if (alertDiv.parentNode) {
-                    alertDiv.parentNode.removeChild(alertDiv);
+                    alertDiv.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 500);
                 }
-            }, 3000);
+            }, 4000);
         },
         showErrorAlert(message) {
             const alertDiv = document.createElement('div');
             alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.style.cssText = 'top: 80px; right: 20px; z-index: 10000; min-width: 350px; max-width: 500px; box-shadow: 0 8px 32px rgba(220, 53, 69, 0.3);';
             alertDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle"></i>
-                <strong>오류!</strong><br>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-danger mb-1">
+                            <i class="fas fa-bug"></i> 오류 발생!
+                        </div>
+                        <div class="small text-danger-emphasis">
+                            ${message}
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-danger" data-bs-dismiss="alert"></button>
+                </div>
             `;
             document.body.appendChild(alertDiv);
 
+            // 진입 애니메이션 (에러는 약간 흔들림 효과 추가)
+            alertDiv.style.transform = 'translateX(100%)';
+            alertDiv.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            setTimeout(() => {
+                alertDiv.style.transform = 'translateX(0)';
+                // 에러 알림에는 약간의 흔들림 추가
+                setTimeout(() => {
+                    alertDiv.style.animation = 'dangerShake 0.5s ease-in-out';
+                }, 200);
+            }, 10);
+
             setTimeout(() => {
                 if (alertDiv.parentNode) {
-                    alertDiv.parentNode.removeChild(alertDiv);
+                    alertDiv.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 500);
                 }
-            }, 5000);
+            }, 6000);
         },
         // Utility methods for future vulnerability types
         async executeSQLTest() {

@@ -1140,3 +1140,347 @@ code[class*="language-"] {
         opacity: 1;
     }
 }
+
+/* ===============================================
+   Phase 3: 시각화 및 애니메이션 개선
+   =============================================== */
+
+/* 실시간 진행 상황 애니메이션 */
+.progress-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+    animation: progressGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes progressGlow {
+    0% { box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2); }
+    100% { box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4); }
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.step-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.step-circle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+
+.step-circle.active::before {
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.step-circle.pending {
+    background: #6c757d;
+    transform: scale(0.9);
+}
+
+.step-circle.active {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    transform: scale(1.1);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.step-circle.completed {
+    background: linear-gradient(135deg, #007bff, #6610f2);
+    transform: scale(1);
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(40, 167, 69, 0.3); }
+    50% { box-shadow: 0 0 30px rgba(40, 167, 69, 0.6); }
+}
+
+.step-label {
+    margin-top: 10px;
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.step-circle.active + .step-label {
+    color: #ffd700;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* 진행선 애니메이션 */
+.progress-line {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    z-index: 1;
+    border-radius: 2px;
+}
+
+.progress-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: var(--progress-width, 0%);
+}
+
+/* 보안 점수 시각화 */
+.security-score-container {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+}
+
+.security-score-container::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c);
+    border-radius: 20px;
+    z-index: -1;
+    animation: gradientShift 3s ease-in-out infinite;
+    background-size: 200% 200%;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    background: conic-gradient(from 0deg, #e9ecef 0deg, var(--score-color) var(--score-angle), #e9ecef var(--score-angle));
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score-circle::before {
+    content: '';
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: white;
+}
+
+.score-value {
+    position: relative;
+    z-index: 2;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--score-color);
+}
+
+.score-high {
+    --score-color: #28a745;
+    --score-angle: calc(var(--score) * 3.6deg);
+}
+
+.score-medium {
+    --score-color: #ffc107;
+    --score-angle: calc(var(--score) * 3.6deg);
+}
+
+.score-low {
+    --score-color: #dc3545;
+    --score-angle: calc(var(--score) * 3.6deg);
+}
+
+/* 위험도 배지 애니메이션 */
+.risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.risk-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.risk-badge:hover::before {
+    left: 100%;
+}
+
+.risk-high {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    animation: dangerPulse 2s ease-in-out infinite;
+}
+
+.risk-medium {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+    animation: warningBlink 3s ease-in-out infinite;
+}
+
+.risk-low {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+@keyframes dangerPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 0 30px rgba(220, 53, 69, 0.6); }
+}
+
+@keyframes warningBlink {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0.7; }
+}
+
+/* 성공/실패 결과 애니메이션 */
+.result-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    animation: successGlow 2s ease-in-out infinite alternate;
+}
+
+.result-danger {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+    animation: dangerShake 2s ease-in-out infinite;
+}
+
+@keyframes successGlow {
+    0% { box-shadow: 0 0 20px rgba(40, 167, 69, 0.3); }
+    100% { box-shadow: 0 0 30px rgba(40, 167, 69, 0.6); }
+}
+
+@keyframes dangerShake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px) rotate(-1deg); }
+    20%, 40%, 60%, 80% { transform: translateX(2px) rotate(1deg); }
+}
+
+/* 로딩 스피너 개선 */
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid transparent;
+    border-radius: 50%;
+    margin: 20px auto;
+    background: conic-gradient(from 0deg, #667eea, #764ba2, #f093fb, #f5576c, #667eea);
+    animation: modernSpin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    position: relative;
+}
+
+.loading-spinner::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    border-radius: 50%;
+    background: white;
+}
+
+@keyframes modernSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 호버 효과 개선 */
+.btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transition: all 0.4s ease;
+    transform: translate(-50%, -50%);
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
