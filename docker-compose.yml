@@ -9,6 +9,10 @@ services:
     container_name: websec-dashboard
     ports:
       - "80:80"
+    volumes:
+      # 개발 편의성을 위한 Volume Mount - 코드 변경 시 즉시 반영
+      - ./dashboard/public:/usr/share/nginx/html
+      - ./dashboard/assets:/usr/share/nginx/html/assets
     depends_on:
       - php-server
     networks:
