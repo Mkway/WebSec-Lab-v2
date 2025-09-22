@@ -1,39 +1,16 @@
 version: '3.8'
 
 services:
-  # ===== 통합 대시보드 =====
-  dashboard:
-    build: 
-      context: ./dashboard
-      dockerfile: Dockerfile
-    container_name: websec-dashboard
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - APP_ENV=production
-      - DB_HOST=mysql
-      - REDIS_HOST=redis
-    volumes:
-      - ./dashboard:/var/www/html
-      - ./shared:/var/shared
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - websec-network
-    restart: unless-stopped
-
-  # ===== 언어별 서버들 =====
+  # ===== PHP 서버 (XSS 구현 완료) =====
   php-server:
-    build: 
+    build:
       context: ./servers/php-server
       dockerfile: Dockerfile
     container_name: websec-php
     ports:
       - "8080:80"
     environment:
-      - APP_ENV=production
+      - APP_ENV=development
       - DB_HOST=mysql
       - DB_NAME=websec_php
       - DB_USER=websec
@@ -41,67 +18,66 @@ services:
       - REDIS_HOST=redis
     volumes:
       - ./servers/php-server:/var/www/html
-      - ./shared:/var/shared
     depends_on:
       - mysql
-      - redis
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["core", "php", "all"]
 
+  # ===== Node.js 서버 =====
   nodejs-server:
-    build: 
+    build:
       context: ./servers/nodejs-server
       dockerfile: Dockerfile
     container_name: websec-nodejs
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/websec_nodejs?authSource=admin
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./servers/nodejs-server:/app
-      - ./shared:/var/shared
     depends_on:
       - mongodb
-      - redis
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["nodejs", "all"]
 
+  # ===== Python 서버 =====
   python-server:
-    build: 
+    build:
       context: ./servers/python-server
       dockerfile: Dockerfile
     container_name: websec-python
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
       - DATABASE_URL=postgresql://websec:websec123@postgres:5432/websec_python
       - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/websec_python?authSource=admin
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./servers/python-server:/app
-      - ./shared:/var/shared
     depends_on:
       - postgres
-      - mongodb
-      - redis
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["python", "all"]
 
+  # ===== Java 서버 =====
   java-server:
-    build: 
+    build:
       context: ./servers/java-server
       dockerfile: Dockerfile
     container_name: websec-java
     ports:
       - "8081:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=production
+      - SPRING_PROFILES_ACTIVE=development
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/websec_java
       - SPRING_DATASOURCE_USERNAME=websec
       - SPRING_DATASOURCE_PASSWORD=websec123
@@ -109,24 +85,23 @@ services:
       - SPRING_REDIS_HOST=redis
     volumes:
       - ./servers/java-server:/app
-      - ./shared:/var/shared
     depends_on:
       - mysql
-      - mongodb
-      - redis
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["java", "all"]
 
+  # ===== Go 서버 =====
   go-server:
-    build: 
+    build:
       context: ./servers/go-server
       dockerfile: Dockerfile
     container_name: websec-go
     ports:
       - "8082:8080"
     environment:
-      - GIN_MODE=release
+      - GIN_MODE=debug
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=websec_go
@@ -135,13 +110,12 @@ services:
       - REDIS_ADDR=redis:6379
     volumes:
       - ./servers/go-server:/app
-      - ./shared:/var/shared
     depends_on:
       - mysql
-      - redis
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["go", "all"]
 
   # ===== 데이터베이스 서비스들 =====
   mysql:
@@ -161,6 +135,7 @@ services:
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["core", "php", "java", "go", "all"]
 
   postgres:
     image: postgres:15
@@ -177,6 +152,7 @@ services:
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["python", "all"]
 
   mongodb:
     image: mongo:6.0
@@ -193,6 +169,7 @@ services:
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["nodejs", "python", "all"]
 
   redis:
     image: redis:7-alpine
@@ -205,6 +182,7 @@ services:
     networks:
       - websec-network
     restart: unless-stopped
+    profiles: ["core", "php", "all"]
 
 # ===== 볼륨 정의 =====
 volumes:

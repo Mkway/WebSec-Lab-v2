@@ -2,6 +2,49 @@
 
 **차세대 멀티 언어 웹 보안 취약점 테스트 플랫폼**
 
+## 🚀 빠른 시작
+
+### XSS 테스트 바로 시작 (추천)
+```bash
+make xss
+```
+**→ PHP 서버 + MySQL + Redis 실행**
+**→ 접속: http://localhost:8080**
+
+### 다른 실행 옵션
+```bash
+make php      # PHP 서버만
+make nodejs   # Node.js 서버만
+make python   # Python 서버만
+make java     # Java 서버만
+make go       # Go 서버만
+make all      # 모든 서버 + 데이터베이스
+```
+
+## 🧪 XSS 테스트 실행
+
+### 자동 테스트 (53개 테스트)
+```bash
+make test-xss
+```
+
+### API 테스트
+```bash
+# 기본 XSS 테스트
+curl -X POST http://localhost:8080/vulnerabilities/xss \
+  -H "Content-Type: application/json" \
+  -d '{
+    "payload": "<script>alert(\"XSS\")</script>",
+    "mode": "both"
+  }'
+
+# 페이로드 목록
+curl http://localhost:8080/vulnerabilities/xss/payloads
+
+# 시나리오 목록
+curl http://localhost:8080/vulnerabilities/xss/scenarios
+```
+
 ## 📋 프로젝트 개요
 
 WebSec-Lab v2는 로컬 환경에서 다양한 프로그래밍 언어의 웹 보안 취약점을 안전하게 학습하고 테스트할 수 있는 통합 플랫폼입니다.
@@ -30,48 +73,23 @@ WebSec-Lab v2는 로컬 환경에서 다양한 프로그래밍 언어의 웹 보
 └────────┘  └────────┘  └────────┘  └────────┘  └────────┘
 ```
 
-## 🚀 빠른 시작
-
-### 1. 환경 요구사항
-- Docker & Docker Compose
-- Git
-- 최소 8GB RAM 권장
-
-### 2. 프로젝트 실행
-```bash
-# 저장소 클론
-git clone <repository-url>
-cd websec-lab-v2
-
-# 환경 설정
-cp .env.example .env
-
-# 컨테이너 빌드 및 실행
-make up
-
-# 또는
-docker-compose up -d
-```
-
-### 3. 접속
-- **통합 대시보드**: http://localhost
-- **PHP 서버**: http://localhost:8080
-- **Node.js 서버**: http://localhost:3000
-- **Python 서버**: http://localhost:5000
-- **Java 서버**: http://localhost:8081
-- **Go 서버**: http://localhost:8082
-
-## 🎓 현재 지원하는 취약점 (Phase 1)
+## 🎓 현재 지원하는 취약점
 
 ### ✅ 구현 완료
+- **XSS (Cross-Site Scripting)** (PHP) - 완전 구현 ✨
+  - Reflected XSS (4가지 시나리오)
+  - 17개 실전 페이로드 포함
+  - 취약한/안전한 코드 비교
+  - 53개 자동 테스트 (100% 성공률)
+
 - **SQL Injection** (PHP) - PayloadsAllTheThings 기반
   - Authentication Bypass
   - UNION Based Injection
   - Blind SQL Injection (Boolean/Time-based)
   - Error Based Injection
 
-### 🔄 진행 중 (다음 단계)
-- **XSS (Cross-Site Scripting)** - 모든 언어
+### 🔄 다음 단계 (Phase 2)
+- **XSS** - 다른 언어 (Node.js, Python, Java, Go)
 - **Command Injection** - 모든 언어
 - **File Upload Vulnerabilities** - 모든 언어
 - **Directory Traversal** - 모든 언어
@@ -80,63 +98,58 @@ docker-compose up -d
 - CSRF, SSTI, XXE, SSRF, NoSQL Injection
 - Language-specific vulnerabilities (PHP Object Injection, Node.js Prototype Pollution, etc.)
 
-## 🛠️ 개발 명령어
+## 🛠️ 관리 명령어
 
+### 🎯 주요 명령어
 ```bash
-# 모든 서버 시작
-make up
-
-# 개발 모드로 시작 (핫 리로드)
-make dev-up
-
-# 특정 언어 서버만 시작
-make up-php
-make up-node
-make up-python
-
-# 로그 확인
-make logs
-make logs-php
-
-# 테스트 실행
-make test-all
-
-# 환경 정리
-make clean
+make help      # 도움말
+make status    # 컨테이너 상태 확인
+make logs      # 실시간 로그 보기
+make stop      # 모든 컨테이너 중지
+make clean     # 완전 정리
+make restart   # 빠른 재시작
 ```
 
-## 🧪 사용 예시
-
-### SQL Injection 테스트 (PHP 서버)
+### 🧪 테스트 명령어
 ```bash
-# 취약한 코드 테스트
-curl -X POST http://localhost:8080/vulnerabilities/sql-injection \
-  -H "Content-Type: application/json" \
-  -d '{
-    "payload": "'\'' OR '\''1'\''='\''1",
-    "mode": "vulnerable",
-    "parameters": {
-      "test_type": "login",
-      "target": "username"
-    }
-  }'
-
-# 안전한 코드 테스트
-curl -X POST http://localhost:8080/vulnerabilities/sql-injection \
-  -H "Content-Type: application/json" \
-  -d '{
-    "payload": "'\'' OR '\''1'\''='\''1",
-    "mode": "safe",
-    "parameters": {
-      "test_type": "login",
-      "target": "username"
-    }
-  }'
+make test-xss  # XSS 테스트 실행 (53개 테스트)
+make test-api  # API 테스트 실행
 ```
 
-### 서버 헬스체크
-```bash
-curl http://localhost:8080/health
+## 🌐 접속 주소
+
+| 서비스 | URL | 상태 |
+|--------|-----|------|
+| **PHP 서버** | http://localhost:8080 | ✅ XSS 완전 구현 |
+| **Node.js 서버** | http://localhost:3000 | 🔄 구현 예정 |
+| **Python 서버** | http://localhost:5000 | 🔄 구현 예정 |
+| **Java 서버** | http://localhost:8081 | 🔄 구현 예정 |
+| **Go 서버** | http://localhost:8082 | 🔄 구현 예정 |
+
+## 🎭 XSS 테스트 시나리오
+
+- **basic**: 기본 출력
+- **search**: 검색 결과 페이지
+- **greeting**: 사용자 인사말
+- **form**: 폼 입력 결과
+
+## 💣 XSS 페이로드 예시
+
+```javascript
+// 기본 스크립트
+<script>alert("XSS")</script>
+
+// 이미지 태그
+<img src=x onerror=alert("XSS")>
+
+// SVG 태그
+<svg onload=alert("XSS")>
+
+// 속성 우회
+" onmouseover="alert('XSS')" "
+
+// 대소문자 우회
+<ScRiPt>alert("XSS")</ScRiPt>
 ```
 
 ## 📊 데이터베이스 구성
@@ -145,6 +158,27 @@ curl http://localhost:8080/health
 - **PostgreSQL**: Python 서버용 고급 SQL 기능
 - **MongoDB**: Node.js, Python 서버용 NoSQL 데이터
 - **Redis**: 세션 캐시 및 임시 데이터 저장
+
+## 🧪 XSS 테스트 결과
+
+```bash
+🛡️  XSS 테스트 프레임워크 시작
+📋 XSS 테스트 실행 중...
+
+🔍 기본 XSS 테스트 - ✅ 성공
+🎭 시나리오별 테스트 - ✅ 성공
+💣 페이로드 테스트 - ✅ 성공
+🛡️ 방어 메커니즘 테스트 - ✅ 성공
+🔓 우회 기법 테스트 - ✅ 성공
+
+📊 테스트 결과:
+   총 테스트: 53
+   성공: 53
+   실패: 0
+   성공률: 100.0%
+
+🎉 모든 테스트가 성공했습니다!
+```
 
 ## 🔒 보안 주의사항
 
@@ -155,25 +189,16 @@ curl http://localhost:8080/health
 - ✅ **격리된 로컬 환경에서만 사용**
 - ✅ **학습 및 연구 목적으로만 사용**
 
-## 📖 문서
-
-- [📐 시스템 아키텍처](docs/architecture/system-architecture.md)
-- [🐳 Docker 구성](docs/deployment/docker-setup.md)
-- [🔧 개발 가이드](docs/development/development-guide.md)
-- [🌐 API 문서](docs/api/api-reference.md)
-- [🏗️ 프로젝트 구조](docs/architecture/project-structure.md)
-- [🎯 취약점 우선순위](VULNERABILITY_PRIORITY.md)
-
 ## 🚀 개발 로드맵
 
 ### Phase 1 (완료) ✅
 - [x] Docker 환경 구축
 - [x] 언어별 서버 기본 구조
 - [x] SQL Injection 모듈 구현 (PHP)
-- [x] 데이터베이스 초기화 스크립트
+- [x] XSS 모듈 완전 구현 (PHP) ✨
 
 ### Phase 2 (진행 중) 🔄
-- [ ] XSS 모듈 구현 (모든 언어)
+- [ ] XSS 모듈 구현 (Node.js, Python, Java, Go)
 - [ ] Command Injection 모듈 구현
 - [ ] 통합 대시보드 개발
 - [ ] 크로스 언어 비교 기능
@@ -210,6 +235,13 @@ curl http://localhost:8080/health
 ---
 
 ## 📝 변경 이력
+
+### v2.1.0 (2024-09-22)
+- 🎉 **XSS 모듈 완전 구현** (PHP)
+- ✅ 53개 테스트 100% 성공
+- 🧪 자동화된 테스트 프레임워크 구축
+- 🐳 Docker 환경 통합 및 정리
+- 📋 프로파일 기반 실행 시스템
 
 ### v2.0.0-alpha (2024-01-15)
 - 🎉 초기 프로젝트 구조 완성
