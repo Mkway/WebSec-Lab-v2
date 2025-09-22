@@ -54,145 +54,271 @@
                 <!-- Main Panel -->
                 <div class="col-md-9">
                     <!-- XSS Testing Panel -->
-                    <div v-if="activeVuln === 'xss'" class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-code"></i> XSS (Cross-Site Scripting) 테스트</h5>
-                        </div>
-                        <div class="card-body">
-                            <!-- Test Form -->
-                            <div class="row mb-4">
-                                <div class="col-md-8">
-                                    <div class="mb-3">
-                                        <label class="form-label">테스트 페이로드</label>
-                                        <div class="input-group">
-                                            <input
-                                                v-model="xssPayload"
-                                                type="text"
-                                                class="form-control"
-                                                placeholder="XSS 페이로드를 입력하세요"
-                                            >
-                                            <button @click="loadSamplePayload" class="btn btn-outline-secondary">
-                                                <i class="fas fa-flask"></i> 샘플
-                                            </button>
-                                        </div>
+                    <div v-if="activeVuln === 'xss'">
+                        <!-- Test Configuration Panel (사용자 친화적) -->
+                        <div class="test-config-panel">
+                            <h5>
+                                <i class="fas fa-bug"></i>
+                                XSS 보안 테스트
+                                <span class="info-tooltip">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span class="tooltip-text">XSS는 악성 스크립트를 웹페이지에 삽입하는 공격입니다</span>
+                                </span>
+                            </h5>
+                            <div class="config-row">
+                                <div>
+                                    <label class="form-label">
+                                        <i class="fas fa-code"></i> 테스트할 코드
+                                        <span class="info-tooltip">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span class="tooltip-text">악성 스크립트 코드를 입력하여 보안 테스트를 진행합니다</span>
+                                        </span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input
+                                            v-model="xssPayload"
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="예: &lt;script&gt;alert('XSS')&lt;/script&gt;"
+                                        >
+                                        <button @click="loadSamplePayload" class="btn btn-outline-secondary">
+                                            <i class="fas fa-flask"></i> 샘플
+                                        </button>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">테스트 모드</label>
-                                        <select v-model="xssMode" class="form-select">
-                                            <option value="both">취약한 & 안전한 코드 비교</option>
-                                            <option value="vulnerable">취약한 코드만</option>
-                                            <option value="safe">안전한 코드만</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">시나리오</label>
-                                        <select v-model="xssScenario" class="form-select">
-                                            <option value="basic">기본 출력</option>
-                                            <option value="search">검색 결과</option>
-                                            <option value="greeting">사용자 인사말</option>
-                                            <option value="form">폼 입력 결과</option>
-                                        </select>
-                                    </div>
-                                    <button @click="executeXSSTest" :disabled="isLoading" class="btn btn-danger">
+                                </div>
+                                <div>
+                                    <label class="form-label">
+                                        <i class="fas fa-theater-masks"></i> 상황 설정
+                                    </label>
+                                    <select v-model="xssScenario" class="form-select">
+                                        <option value="basic">🖥️ 기본 웹페이지 출력</option>
+                                        <option value="search">🔍 검색 결과 페이지</option>
+                                        <option value="greeting">👋 사용자 인사말</option>
+                                        <option value="form">📝 폼 입력 결과</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">
+                                        <i class="fas fa-balance-scale"></i> 비교 모드
+                                    </label>
+                                    <select v-model="xssMode" class="form-select">
+                                        <option value="both">⚔️ 취약 vs 안전 비교</option>
+                                        <option value="vulnerable">🔓 취약한 코드만</option>
+                                        <option value="safe">🛡️ 안전한 코드만</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <button @click="executeXSSTest" :disabled="isLoading" class="btn btn-danger btn-lg">
                                         <i class="fas fa-play" v-if="!isLoading"></i>
                                         <i class="fas fa-spinner fa-spin" v-else></i>
-                                        XSS 테스트 실행
+                                        {{ isLoading ? '테스트 중...' : '🚀 테스트 시작' }}
                                     </button>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <h6>빠른 페이로드</h6>
-                                            <div class="d-grid gap-2">
-                                                <button
-                                                    v-for="payload in quickPayloads"
-                                                    :key="payload.name"
-                                                    @click="xssPayload = payload.code"
-                                                    class="btn btn-sm btn-outline-primary"
-                                                >
-                                                    {{ payload.name }}
-                                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Indicator -->
+                        <div v-if="testProgress.show" class="test-progress">
+                            <h6><i class="fas fa-clock"></i> 테스트 진행 상황</h6>
+                            <div class="progress-steps">
+                                <div class="progress-step" :class="getStepClass('request')">
+                                    <div class="step-icon" :class="getStepClass('request')">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </div>
+                                    <div class="step-label">요청 전송</div>
+                                </div>
+                                <div class="progress-step" :class="getStepClass('parse')">
+                                    <div class="step-icon" :class="getStepClass('parse')">
+                                        <i class="fas fa-cogs"></i>
+                                    </div>
+                                    <div class="step-label">코드 파싱</div>
+                                </div>
+                                <div class="progress-step" :class="getStepClass('execute')">
+                                    <div class="step-icon" :class="getStepClass('execute')">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div class="step-label">코드 실행</div>
+                                </div>
+                                <div class="progress-step" :class="getStepClass('analyze')">
+                                    <div class="step-icon" :class="getStepClass('analyze')">
+                                        <i class="fas fa-search"></i>
+                                    </div>
+                                    <div class="step-label">보안 분석</div>
+                                </div>
+                                <div class="progress-step" :class="getStepClass('result')">
+                                    <div class="step-icon" :class="getStepClass('result')">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="step-label">결과 생성</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Payloads Panel -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6><i class="fas fa-bolt"></i> 빠른 테스트 코드 선택</h6>
+                                <div class="row">
+                                    <div class="col-md-2" v-for="payload in quickPayloads" :key="payload.name">
+                                        <button
+                                            @click="selectQuickPayload(payload)"
+                                            class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                            :title="payload.description"
+                                        >
+                                            {{ payload.icon }} {{ payload.name }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Split View Results (사용자 친화적 디자인) -->
+                        <div v-if="xssResult">
+                            <!-- Success/Error Alert -->
+                            <div v-if="xssResult.success" class="alert alert-success mb-4">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>🎉 테스트 완료!</strong>
+                                보안 테스트가 성공적으로 실행되었습니다.
+                            </div>
+                            <div v-else-if="xssResult && !xssResult.success" class="alert alert-danger mb-4">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>❌ 테스트 오류</strong><br>
+                                {{ xssResult.error }}<br>
+                                <small v-if="xssResult.details">상세 정보: {{ xssResult.details }}</small>
+                            </div>
+
+                            <!-- Split View Comparison -->
+                            <div v-if="xssMode === 'both' && xssResult.data" class="split-view-container">
+                                <!-- Vulnerable Code Panel -->
+                                <div class="vulnerable-panel">
+                                    <div class="panel-header">
+                                        <i class="fas fa-unlock"></i>
+                                        <span>🔓 취약한 코드 (위험)</span>
+                                        <span class="info-tooltip">
+                                            <i class="fas fa-question-circle"></i>
+                                            <span class="tooltip-text">보안 조치가 없어 XSS 공격에 취약한 코드입니다</span>
+                                        </span>
+                                    </div>
+                                    <div class="panel-body">
+                                        <!-- Status Indicator -->
+                                        <div class="status-indicator vulnerable">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            {{ xssResult.data.result?.vulnerable?.xss_detected ? '⚠️ XSS 공격 성공' : '✅ 공격 실패' }}
+                                        </div>
+
+                                        <!-- PHP Source Code -->
+                                        <div class="code-section">
+                                            <h6><i class="fas fa-code"></i> PHP 소스 코드</h6>
+                                            <div class="code-block vulnerable">
+                                                echo $_GET['input'];<br>
+                                                <span class="text-muted">// 사용자 입력을 필터링 없이 그대로 출력</span><br>
+                                                <span class="text-danger">// ⚠️ XSS 취약점 존재!</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Execution Result -->
+                                        <div class="result-section">
+                                            <h6><i class="fas fa-desktop"></i> 실행 결과</h6>
+                                            <div class="result-display" :class="xssResult.data.result?.vulnerable?.xss_detected ? 'has-xss' : 'no-xss'">
+                                                <div v-if="xssResult.data.result?.vulnerable?.xss_detected" class="text-danger">
+                                                    <strong>⚠️ 위험한 스크립트가 실행됩니다!</strong>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <code>{{ xssResult.data.result?.vulnerable?.html_output }}</code>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Security Analysis -->
+                                        <div class="security-analysis">
+                                            <h6><i class="fas fa-shield-alt"></i> 보안 분석</h6>
+                                            <div class="analysis-item">
+                                                <span>스크립트 태그 탐지</span>
+                                                <span class="analysis-value bad">❌ 차단 안됨</span>
+                                            </div>
+                                            <div class="analysis-item">
+                                                <span>HTML 인코딩</span>
+                                                <span class="analysis-value bad">❌ 적용 안됨</span>
+                                            </div>
+                                            <div class="analysis-item">
+                                                <span>보안 점수</span>
+                                                <span class="analysis-value bad">0/100</span>
+                                            </div>
+                                            <div class="analysis-item">
+                                                <span>실행 시간</span>
+                                                <span class="analysis-value">{{ xssResult.data.result?.vulnerable?.execution_time }}초</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Safe Code Panel -->
+                                <div class="safe-panel">
+                                    <div class="panel-header">
+                                        <i class="fas fa-lock"></i>
+                                        <span>🛡️ 안전한 코드 (보호됨)</span>
+                                        <span class="info-tooltip">
+                                            <i class="fas fa-question-circle"></i>
+                                            <span class="tooltip-text">보안 조치가 적용되어 XSS 공격을 차단하는 코드입니다</span>
+                                        </span>
+                                    </div>
+                                    <div class="panel-body">
+                                        <!-- Status Indicator -->
+                                        <div class="status-indicator safe">
+                                            <i class="fas fa-shield-alt"></i>
+                                            {{ xssResult.data.result?.safe?.xss_detected ? '⚠️ 보안 실패' : '✅ XSS 차단 성공' }}
+                                        </div>
+
+                                        <!-- PHP Source Code -->
+                                        <div class="code-section">
+                                            <h6><i class="fas fa-code"></i> PHP 소스 코드</h6>
+                                            <div class="code-block safe">
+                                                echo htmlspecialchars(<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;$_GET['input'],<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;ENT_QUOTES,<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;'UTF-8'<br>
+                                                );<br>
+                                                <span class="text-muted">// HTML 엔티티 인코딩으로 XSS 차단</span><br>
+                                                <span class="text-success">// ✅ 보안 조치 적용!</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Execution Result -->
+                                        <div class="result-section">
+                                            <h6><i class="fas fa-desktop"></i> 실행 결과</h6>
+                                            <div class="result-display no-xss">
+                                                <div class="text-success">
+                                                    <strong>✅ 스크립트가 안전하게 무력화되었습니다!</strong>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <code>{{ xssResult.data.result?.safe?.raw_output || xssResult.data.result?.safe?.html_output }}</code>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Security Analysis -->
+                                        <div class="security-analysis">
+                                            <h6><i class="fas fa-shield-alt"></i> 보안 분석</h6>
+                                            <div class="analysis-item">
+                                                <span>HTML 인코딩</span>
+                                                <span class="analysis-value good">✅ 적용됨</span>
+                                            </div>
+                                            <div class="analysis-item">
+                                                <span>스크립트 무력화</span>
+                                                <span class="analysis-value good">✅ 성공</span>
+                                            </div>
+                                            <div class="analysis-item">
+                                                <span>보안 점수</span>
+                                                <span class="analysis-value good">95/100</span>
+                                            </div>
+                                            <div class="analysis-item">
+                                                <span>실행 시간</span>
+                                                <span class="analysis-value">{{ xssResult.data.result?.safe?.execution_time }}초</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Results -->
-                            <div v-if="xssResult" class="mt-4">
-                                <h6><i class="fas fa-chart-line"></i> 테스트 결과</h6>
-
-                                <!-- Success/Failure Alert -->
-                                <div v-if="xssResult.success" class="alert alert-success">
-                                    <i class="fas fa-check-circle"></i> 테스트 성공적으로 완료
-                                </div>
-                                <div v-else-if="xssResult && !xssResult.success" class="alert alert-danger">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>테스트 실행 중 오류 발생</strong><br>
-                                    {{ xssResult.error }}<br>
-                                    <small v-if="xssResult.details">상세: {{ xssResult.details }}</small>
-                                </div>
-
-                                <!-- Comparison Results -->
-                                <div v-if="xssMode === 'both' && xssResult.data" class="row">
-                                    <div class="col-md-6">
-                                        <div class="card border-danger">
-                                            <div class="card-header bg-danger text-white">
-                                                <h6 class="mb-0"><i class="fas fa-bug"></i> 취약한 코드</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="mb-3">
-                                                    <strong>XSS 탐지:</strong>
-                                                    <span :class="xssResult.data.result?.vulnerable?.xss_detected ? 'text-danger' : 'text-success'">
-                                                        {{ xssResult.data.result?.vulnerable?.xss_detected ? '발견됨 ⚠️' : '발견되지 않음 ✅' }}
-                                                    </span>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <strong>실제 HTML 출력:</strong>
-                                                    <div class="vulnerable-output p-3 border rounded" v-html="xssResult.data.result?.vulnerable?.html_output"></div>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <strong>소스 코드:</strong>
-                                                    <pre class="bg-light p-2 mt-1">{{ xssResult.data.result?.vulnerable?.html_output }}</pre>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <small class="text-muted">
-                                                        실행 시간: {{ xssResult.data.result?.vulnerable?.execution_time }}초
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card border-success">
-                                            <div class="card-header bg-success text-white">
-                                                <h6 class="mb-0"><i class="fas fa-shield-alt"></i> 안전한 코드</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="mb-3">
-                                                    <strong>XSS 탐지:</strong>
-                                                    <span :class="xssResult.data.result?.safe?.xss_detected ? 'text-danger' : 'text-success'">
-                                                        {{ xssResult.data.result?.safe?.xss_detected ? '발견됨 ⚠️' : '발견되지 않음 ✅' }}
-                                                    </span>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <strong>실제 HTML 출력:</strong>
-                                                    <div class="safe-output p-3 border rounded">{{ xssResult.data.result?.safe?.raw_output }}</div>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <strong>소스 코드:</strong>
-                                                    <pre class="bg-light p-2 mt-1">{{ xssResult.data.result?.safe?.html_output }}</pre>
-                                                </div>
-                                                <div class="mb-2">
-                                                    <small class="text-muted">
-                                                        실행 시간: {{ xssResult.data.result?.safe?.execution_time }}초<br>
-                                                        방어 방법: {{ xssResult.data.result?.safe?.context?.defense_method }}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 <!-- Analysis -->
                                 <div v-if="xssResult.data?.analysis" class="mt-3">

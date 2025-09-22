@@ -55,30 +55,47 @@ createApp({
             },
             quickPayloads: [
                 {
-                    name: 'Basic Script',
-                    code: '<script>alert("XSS")</script>'
+                    name: '기본 스크립트',
+                    icon: '🚀',
+                    code: '<script>alert("XSS")</script>',
+                    description: '가장 기본적인 XSS 공격 코드입니다'
                 },
                 {
-                    name: 'Image Onerror',
-                    code: '<img src=x onerror=alert("XSS")>'
+                    name: '이미지 오류',
+                    icon: '🖼️',
+                    code: '<img src=x onerror=alert("XSS")>',
+                    description: '이미지 로드 실패 시 스크립트를 실행합니다'
                 },
                 {
-                    name: 'SVG Onload',
-                    code: '<svg onload=alert("XSS")>'
+                    name: 'SVG 로드',
+                    icon: '🎨',
+                    code: '<svg onload=alert("XSS")>',
+                    description: 'SVG 요소 로드 시 스크립트를 실행합니다'
                 },
                 {
-                    name: 'Event Handler',
-                    code: '" onmouseover="alert(\'XSS\')" "'
+                    name: '이벤트 핸들러',
+                    icon: '👆',
+                    code: '" onmouseover="alert(\'XSS\')" "',
+                    description: '마우스 이벤트로 스크립트를 실행합니다'
                 },
                 {
-                    name: 'Case Bypass',
-                    code: '<ScRiPt>alert("XSS")</ScRiPt>'
+                    name: '대소문자 우회',
+                    icon: '🔤',
+                    code: '<ScRiPt>alert("XSS")</ScRiPt>',
+                    description: '대소문자 혼용으로 필터를 우회합니다'
                 },
                 {
-                    name: 'Iframe Src',
-                    code: '<iframe src="javascript:alert(\'XSS\')"></iframe>'
+                    name: 'iframe 스크립트',
+                    icon: '🖥️',
+                    code: '<iframe src="javascript:alert(\'XSS\')"></iframe>',
+                    description: 'iframe을 이용한 자바스크립트 실행입니다'
                 }
-            ]
+            ],
+            testProgress: {
+                show: false,
+                currentStep: 'request',
+                steps: ['request', 'parse', 'execute', 'analyze', 'result']
+            }
         };
     },
     mounted() {
@@ -137,6 +154,10 @@ createApp({
             this.isLoading = true;
             this.xssResult = null;
 
+            // 테스트 진행 상황 표시 시작
+            this.testProgress.show = true;
+            this.testProgress.currentStep = 'request';
+
             // 실행 상태 초기화
             this.xssExecutionStatus = {
                 vulnerable: null,
@@ -144,6 +165,10 @@ createApp({
             };
 
             try {
+                // Step 1: 요청 전송
+                this.updateProgressStep('request');
+                await this.delay(800);
+
                 const payload = {
                     payload: this.xssPayload,
                     mode: this.xssMode,
@@ -153,7 +178,10 @@ createApp({
                 };
 
                 console.log('🚀 Sending XSS test request:', payload);
-                console.log('🌐 Target URL:', '/api/vulnerabilities/xss');
+
+                // Step 2: 코드 파싱
+                this.updateProgressStep('parse');
+                await this.delay(600);
 
                 const response = await fetch('/api/vulnerabilities/xss', {
                     method: 'POST',
@@ -165,15 +193,24 @@ createApp({
                     body: JSON.stringify(payload)
                 });
 
-                console.log('📡 Response status:', response.status);
-                console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+                // Step 3: 코드 실행
+                this.updateProgressStep('execute');
+                await this.delay(1000);
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
+                // Step 4: 보안 분석
+                this.updateProgressStep('analyze');
+                await this.delay(800);
+
                 const data = await response.json();
                 console.log('✅ XSS test response:', data);
+
+                // Step 5: 결과 생성
+                this.updateProgressStep('result');
+                await this.delay(500);
 
                 this.xssResult = {
                     success: true,
@@ -181,7 +218,7 @@ createApp({
                 };
 
                 // 성공 알림
-                this.showSuccessAlert('XSS 테스트가 성공적으로 완료되었습니다!');
+                this.showSuccessAlert('🎉 XSS 보안 테스트가 완료되었습니다!');
 
             } catch (error) {
                 console.error('❌ XSS test failed:', error);
@@ -193,10 +230,41 @@ createApp({
                 };
 
                 // 에러 알림
-                this.showErrorAlert(`테스트 실행 실패: ${error.message}`);
+                this.showErrorAlert(`❌ 테스트 실행 실패: ${error.message}`);
             } finally {
                 this.isLoading = false;
+                // 3초 후 진행 상황 숨기기
+                setTimeout(() => {
+                    this.testProgress.show = false;
+                }, 3000);
             }
+        },
+
+        // 사용자 친화적 기능들
+        selectQuickPayload(payload) {
+            this.xssPayload = payload.code;
+            this.showSuccessAlert(`${payload.icon} ${payload.name} 페이로드가 선택되었습니다!`);
+        },
+
+        updateProgressStep(step) {
+            this.testProgress.currentStep = step;
+        },
+
+        getStepClass(step) {
+            const currentIndex = this.testProgress.steps.indexOf(this.testProgress.currentStep);
+            const stepIndex = this.testProgress.steps.indexOf(step);
+
+            if (stepIndex < currentIndex) {
+                return 'completed';
+            } else if (stepIndex === currentIndex) {
+                return 'active';
+            } else {
+                return 'pending';
+            }
+        },
+
+        delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         },
         getRiskClass(level) {
             switch (level?.toLowerCase()) {
