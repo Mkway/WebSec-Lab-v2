@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use WebSecLab\Controllers\VulnerabilityController;
+use WebSecLab\Controllers\XSSController;
 use WebSecLab\Controllers\HealthController;
 use WebSecLab\Utils\DatabaseManager;
 
@@ -45,12 +46,56 @@ try {
             
         case 'vulnerabilities':
             if (!isset($pathParts[1])) {
-                throw new Exception('Vulnerability type not specified');
+                $controller = new VulnerabilityController();
+                echo $controller->listVulnerabilities();
+                break;
             }
-            
-            $controller = new VulnerabilityController();
+
             $vulnerabilityType = $pathParts[1];
-            
+
+            // XSS 전용 라우팅
+            if ($vulnerabilityType === 'xss') {
+                $xssController = new XSSController();
+
+                switch ($requestMethod) {
+                    case 'POST':
+                        if (isset($pathParts[2])) {
+                            switch ($pathParts[2]) {
+                                case 'reflected':
+                                    echo $xssController->testReflectedXSS();
+                                    break;
+                                default:
+                                    echo $xssController->testReflectedXSS();
+                            }
+                        } else {
+                            echo $xssController->testReflectedXSS();
+                        }
+                        break;
+                    case 'GET':
+                        if (isset($pathParts[2])) {
+                            switch ($pathParts[2]) {
+                                case 'payloads':
+                                    echo $xssController->getPayloads();
+                                    break;
+                                case 'scenarios':
+                                    echo $xssController->getScenarios();
+                                    break;
+                                default:
+                                    echo $xssController->getScenarios();
+                            }
+                        } else {
+                            echo $xssController->getScenarios();
+                        }
+                        break;
+                    default:
+                        throw new Exception('Method not allowed');
+                }
+                break;
+            }
+
+            // 기타 취약점 타입
+            $controller = new VulnerabilityController();
+
             switch ($requestMethod) {
                 case 'GET':
                     echo $controller->listVulnerabilities();
@@ -73,7 +118,10 @@ try {
                 'endpoints' => [
                     'GET /health' => 'Health check',
                     'GET /vulnerabilities' => 'List available vulnerability tests',
-                    'POST /vulnerabilities/{type}' => 'Execute vulnerability test'
+                    'POST /vulnerabilities/{type}' => 'Execute vulnerability test',
+                    'POST /vulnerabilities/xss' => 'Execute XSS test',
+                    'GET /vulnerabilities/xss/payloads' => 'Get XSS payloads',
+                    'GET /vulnerabilities/xss/scenarios' => 'Get XSS scenarios'
                 ],
                 'available_vulnerabilities' => [
                     'sql-injection',
