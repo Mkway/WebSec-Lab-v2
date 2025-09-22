@@ -37,40 +37,40 @@ help:
 # XSS 테스트 환경 (추천)
 xss:
 	@echo "🚀 XSS 테스트 환경 시작 중..."
-	docker-compose --profile core up -d --build
+	docker compose --profile core up -d --build
 	@echo "✅ 완료! PHP 서버: http://localhost:8080"
 	@echo "🧪 XSS 테스트: make test-xss"
 
 # 개별 언어 서버들
 php:
 	@echo "🚀 PHP 서버 시작 중..."
-	docker-compose --profile php up -d --build
+	docker compose --profile php up -d --build
 	@echo "✅ 완료! http://localhost:8080"
 
 nodejs:
 	@echo "🚀 Node.js 서버 시작 중..."
-	docker-compose --profile nodejs up -d --build
+	docker compose --profile nodejs up -d --build
 	@echo "✅ 완료! http://localhost:3000"
 
 python:
 	@echo "🚀 Python 서버 시작 중..."
-	docker-compose --profile python up -d --build
+	docker compose --profile python up -d --build
 	@echo "✅ 완료! http://localhost:5000"
 
 java:
 	@echo "🚀 Java 서버 시작 중..."
-	docker-compose --profile java up -d --build
+	docker compose --profile java up -d --build
 	@echo "✅ 완료! http://localhost:8081"
 
 go:
 	@echo "🚀 Go 서버 시작 중..."
-	docker-compose --profile go up -d --build
+	docker compose --profile go up -d --build
 	@echo "✅ 완료! http://localhost:8082"
 
 # 모든 서비스
 all:
 	@echo "🚀 모든 서비스 시작 중..."
-	docker-compose --profile all up -d --build
+	docker compose --profile all up -d --build
 	@echo "✅ 완료! 모든 서버가 실행됨"
 
 # 테스트 실행
@@ -90,16 +90,16 @@ status:
 
 logs:
 	@echo "📜 실시간 로그 (Ctrl+C로 종료)"
-	docker-compose logs -f
+	docker compose logs -f
 
 stop:
 	@echo "🛑 모든 컨테이너 중지 중..."
-	docker-compose --profile all down
+	docker compose --profile all down
 	@echo "✅ 모든 컨테이너가 중지됨"
 
 clean:
 	@echo "🧹 모든 컨테이너, 이미지, 볼륨 삭제 중..."
-	docker-compose --profile all down -v
+	docker compose --profile all down -v
 	docker system prune -af --volumes
 	@echo "✅ 모든 Docker 리소스가 정리됨"
 
@@ -120,5 +120,5 @@ restart:
 backup:
 	@echo "💾 데이터베이스 백업 중..."
 	mkdir -p backups
-	docker-compose exec -T mysql mysqldump -u root -prootpass123 --all-databases > backups/mysql-backup-$(shell date +%Y%m%d_%H%M%S).sql
+	docker compose exec -T mysql mysqldump -u root -prootpass123 --all-databases > backups/mysql-backup-$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "✅ 백업 완료: backups/ 폴더 확인"

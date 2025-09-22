@@ -23,7 +23,7 @@ RUN pecl install redis && docker-php-ext-enable redis
 RUN pecl install xdebug && docker-php-ext-enable xdebug
 
 # Apache 모듈 활성화
-RUN a2enmod rewrite
+RUN a2enmod rewrite headers
 
 # Composer 설치
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
