@@ -9,7 +9,8 @@ help:
 	@echo "===================================="
 	@echo ""
 	@echo "🎯 빠른 시작:"
-	@echo "  make xss         XSS 테스트 (PHP + MySQL + Redis)"
+	@echo "  make xss         XSS 테스트 (웹 UI + PHP + MySQL + Redis)"
+	@echo "  make dashboard   웹 대시보드만"
 	@echo "  make php         PHP 서버만"
 	@echo "  make nodejs      Node.js 서버만"
 	@echo "  make python      Python 서버만"
@@ -28,6 +29,7 @@ help:
 	@echo "  make clean       완전 정리"
 	@echo ""
 	@echo "🌐 접속 URL:"
+	@echo "  대시보드: http://localhost (웹 UI)"
 	@echo "  PHP:     http://localhost:8080"
 	@echo "  Node.js: http://localhost:3000"
 	@echo "  Python:  http://localhost:5000"
@@ -38,8 +40,15 @@ help:
 xss:
 	@echo "🚀 XSS 테스트 환경 시작 중..."
 	docker compose --profile core up -d --build
+	@echo "✅ 완료! 웹 대시보드: http://localhost"
 	@echo "✅ 완료! PHP 서버: http://localhost:8080"
 	@echo "🧪 XSS 테스트: make test-xss"
+
+# 웹 대시보드만
+dashboard:
+	@echo "🎨 웹 대시보드 시작 중..."
+	docker compose --profile dashboard up -d --build dashboard php-server mysql redis
+	@echo "✅ 완료! 웹 대시보드: http://localhost"
 
 # 개별 언어 서버들
 php:

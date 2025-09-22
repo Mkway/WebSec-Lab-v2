@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  # ===== 웹 대시보드 =====
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: websec-dashboard
+    ports:
+      - "80:80"
+    depends_on:
+      - php-server
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["core", "dashboard", "all"]
+
   # ===== PHP 서버 (XSS 구현 완료) =====
   php-server:
     build:
