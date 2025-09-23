@@ -2,212 +2,345 @@
 
 **차세대 멀티 언어 웹 보안 취약점 테스트 플랫폼**
 
+> 🎯 **단일 카드 UI로 직관적 학습** | 🌍 **5개 언어 XSS 지원** | 📊 **시각적 공격 흐름도**
+
 ## 🚀 빠른 시작
 
-### XSS 테스트 바로 시작 (추천)
+### 통합 대시보드로 XSS 테스트 시작 (추천)
 ```bash
 make xss
 ```
-**→ PHP 서버 + MySQL + Redis 실행**
-**→ 접속: http://localhost:8080**
+**→ 접속: http://localhost** (통합 대시보드)
+**→ 모든 언어의 XSS 테스트를 한 화면에서 비교**
 
-### 다른 실행 옵션
+### 개별 서버 테스트
 ```bash
-make php      # PHP 서버만
-make nodejs   # Node.js 서버만
-make python   # Python 서버만
-make java     # Java 서버만
-make go       # Go 서버만
-make all      # 모든 서버 + 데이터베이스
+make php      # PHP 서버: http://localhost:8080
+make nodejs   # Node.js 서버: http://localhost:3000
+make python   # Python 서버: http://localhost:5000
+make java     # Java 서버: http://localhost:8081
+make go       # Go 서버: http://localhost:8082
 ```
 
-## 🧪 XSS 테스트 실행
+## 🏗️ 시스템 아키텍처
 
-### 자동 테스트 (53개 테스트)
-```bash
-make test-xss
+```mermaid
+graph TB
+    subgraph "🌐 Frontend Layer"
+        D[통합 대시보드<br/>Vue.js + Bootstrap<br/>:80]
+    end
+
+    subgraph "🔄 Language Servers"
+        P[PHP Server<br/>Apache + PHP<br/>:8080]
+        N[Node.js Server<br/>Express.js<br/>:3000]
+        Y[Python Server<br/>Flask<br/>:5000]
+        J[Java Server<br/>Spring Boot<br/>:8081]
+        G[Go Server<br/>Gin Framework<br/>:8082]
+    end
+
+    subgraph "🗄️ Database Layer"
+        M[(MySQL<br/>:3306)]
+        R[(Redis<br/>:6379)]
+    end
+
+    subgraph "🐳 Container Network"
+        NET[websec-network<br/>172.20.0.0/16]
+    end
+
+    D -.-> P
+    D -.-> N
+    D -.-> Y
+    D -.-> J
+    D -.-> G
+
+    P --> M
+    P --> R
+
+    P -.- NET
+    N -.- NET
+    Y -.- NET
+    J -.- NET
+    G -.- NET
+    D -.- NET
+    M -.- NET
+    R -.- NET
+
+    style D fill:#e1f5fe
+    style P fill:#fff3e0
+    style N fill:#e8f5e8
+    style Y fill:#fff8e1
+    style J fill:#fce4ec
+    style G fill:#e3f2fd
+    style M fill:#f3e5f5
+    style R fill:#ffebee
 ```
 
-### API 테스트
-```bash
-# 기본 XSS 테스트
-curl -X POST http://localhost:8080/vulnerabilities/xss \
-  -H "Content-Type: application/json" \
-  -d '{
-    "payload": "<script>alert(\"XSS\")</script>",
-    "mode": "both"
-  }'
+## 🎯 XSS 테스트 플랫폼
 
-# 페이로드 목록
-curl http://localhost:8080/vulnerabilities/xss/payloads
+### ✨ **새로운 단일 카드 UI**
+- **직관적 인터페이스**: 복잡한 Split View → 간단한 단일 카드
+- **시각적 공격 흐름**: 👤 사용자 입력 → 🌐 서버 처리 → 💻 브라우저 결과
+- **실시간 실행**: 취약/안전 코드를 각각 버튼으로 바로 테스트
+- **언어별 비교**: 5개 언어의 XSS 구현을 한 화면에서 비교
 
-# 시나리오 목록
-curl http://localhost:8080/vulnerabilities/xss/scenarios
+### 🌍 **지원 언어 및 상태**
+
+| 언어 | 프레임워크 | 취약한 코드 | 안전한 코드 | 상태 |
+|------|------------|-------------|-------------|------|
+| 🐘 **PHP** | Native | `echo $_GET['input']` | `htmlspecialchars()` | ✅ **완료** |
+| 💚 **Node.js** | Express | 직접 출력 | HTML 이스케이프 | ✅ **완료** |
+| 🐍 **Python** | Flask | `f-string` 직접 출력 | `html.escape()` | ✅ **완료** |
+| ☕ **Java** | Spring Boot | 직접 문자열 연결 | `HtmlUtils.htmlEscape()` | ✅ **완료** |
+| 🐹 **Go** | Gin | `c.String()` 직접 출력 | `html.EscapeString()` | ✅ **완료** |
+
+### 📊 **테스트 기능**
+
+```mermaid
+flowchart LR
+    A[사용자 페이로드 입력] --> B{언어 선택}
+    B --> C[🚀 테스트 시작]
+    C --> D[실시간 진행 상황]
+    D --> E[공격 흐름도 표시]
+    E --> F[코드 비교 분석]
+    F --> G[개별 실행 버튼]
+    G --> H[실시간 결과 표시]
+
+    style A fill:#e3f2fd
+    style C fill:#ffebee
+    style E fill:#e8f5e8
+    style G fill:#fff3e0
+    style H fill:#f3e5f5
 ```
 
-## 📋 프로젝트 개요
+## 🧪 XSS 페이로드 라이브러리
 
-WebSec-Lab v2는 로컬 환경에서 다양한 프로그래밍 언어의 웹 보안 취약점을 안전하게 학습하고 테스트할 수 있는 통합 플랫폼입니다.
-
-### 🎯 주요 목표
-- **멀티 언어 지원**: PHP, Node.js, Python, Java, Go 등 다양한 언어 환경
-- **실시간 비교**: 언어별 취약점 동작 방식 비교 분석
-- **교육적 목적**: 안전한 로컬 환경에서의 보안 학습
-- **확장성**: 새로운 언어와 취약점 쉽게 추가 가능
-- **PayloadsAllTheThings 통합**: 실제 공격 페이로드 데이터베이스 활용
-
-## 🏗️ 아키텍처
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Frontend Dashboard                        │
-│                     (PHP + Vue.js)                          │
-└─────────────────────┬───────────────────────────────────────┘
-                     │ API Gateway
-    ┌────────────────┼────────────────┐
-    │                │                │
-┌───▼────┐  ┌───▼────┐  ┌───▼────┐  ┌───▼────┐  ┌───▼────┐
-│  PHP   │  │Node.js │  │ Python │  │  Java  │  │   Go   │
-│  App   │  │ Express│  │ Flask  │  │Spring  │  │  Gin   │
-│ :8080  │  │ :3000  │  │ :5000  │  │ :8081  │  │ :8082  │
-└────────┘  └────────┘  └────────┘  └────────┘  └────────┘
+### 🚀 **기본 테스트**
+```html
+<script>alert("XSS")</script>
 ```
 
-## 🎓 현재 지원하는 취약점
+### 🖼️ **이미지 태그 우회**
+```html
+<img src=x onerror=alert("XSS")>
+```
 
-### ✅ 구현 완료
-- **XSS (Cross-Site Scripting)** (PHP) - 완전 구현 ✨
-  - Reflected XSS (4가지 시나리오)
-  - 17개 실전 페이로드 포함
-  - 취약한/안전한 코드 비교
-  - 53개 자동 테스트 (100% 성공률)
+### 🎨 **SVG 벡터**
+```html
+<svg onload=alert("XSS")>
+```
 
-- **SQL Injection** (PHP) - PayloadsAllTheThings 기반
-  - Authentication Bypass
-  - UNION Based Injection
-  - Blind SQL Injection (Boolean/Time-based)
-  - Error Based Injection
+### 👆 **이벤트 핸들러**
+```html
+" onmouseover="alert('XSS')" "
+```
 
-### 🔄 다음 단계 (Phase 2)
-- **XSS** - 다른 언어 (Node.js, Python, Java, Go)
-- **Command Injection** - 모든 언어
-- **File Upload Vulnerabilities** - 모든 언어
-- **Directory Traversal** - 모든 언어
+### 🔤 **대소문자 우회**
+```html
+<ScRiPt>alert("XSS")</ScRiPt>
+```
 
-### 📋 계획된 취약점
-- CSRF, SSTI, XXE, SSRF, NoSQL Injection
-- Language-specific vulnerabilities (PHP Object Injection, Node.js Prototype Pollution, etc.)
+### 🖥️ **iframe 스크립트**
+```html
+<iframe src="javascript:alert('XSS')">
+```
+
+## 🎓 교육적 특징
+
+### 📚 **비교 학습**
+- **취약한 코드**: 실제 XSS 공격이 성공하는 코드
+- **안전한 코드**: 같은 기능이지만 보안이 적용된 코드
+- **언어별 차이**: 각 언어의 고유한 보안 방법 비교
+
+### 🔍 **시각적 분석**
+- **공격 흐름도**: XSS 동작 원리를 단계별로 시각화
+- **실시간 결과**: 버튼 클릭으로 즉시 코드 실행 결과 확인
+- **상태 표시**: 공격 성공/실패를 직관적 아이콘으로 표시
 
 ## 🛠️ 관리 명령어
 
-### 🎯 주요 명령어
+### 🎯 **주요 명령어**
 ```bash
-make help      # 도움말
-make status    # 컨테이너 상태 확인
-make logs      # 실시간 로그 보기
-make stop      # 모든 컨테이너 중지
-make clean     # 완전 정리
-make restart   # 빠른 재시작
+make help      # 📖 전체 명령어 도움말
+make xss       # 🚀 XSS 테스트 환경 시작 (추천)
+make status    # 📊 컨테이너 상태 확인
+make logs      # 📝 실시간 로그 보기
+make stop      # ⏹️ 모든 컨테이너 중지
+make clean     # 🧹 완전 정리 (볼륨 포함)
+make restart   # 🔄 빠른 재시작
 ```
 
-### 🧪 테스트 명령어
+### 🧪 **테스트 명령어**
 ```bash
-make test-xss  # XSS 테스트 실행 (53개 테스트)
-make test-api  # API 테스트 실행
+make test-xss  # 🎯 XSS 자동 테스트
+make test-api  # 🔌 API 엔드포인트 테스트
 ```
 
 ## 🌐 접속 주소
 
-| 서비스 | URL | 상태 |
-|--------|-----|------|
-| **PHP 서버** | http://localhost:8080 | ✅ XSS 완전 구현 |
-| **Node.js 서버** | http://localhost:3000 | 🔄 구현 예정 |
-| **Python 서버** | http://localhost:5000 | 🔄 구현 예정 |
-| **Java 서버** | http://localhost:8081 | 🔄 구현 예정 |
-| **Go 서버** | http://localhost:8082 | 🔄 구현 예정 |
+| 서비스 | URL | 설명 | 상태 |
+|--------|-----|------|------|
+| **통합 대시보드** | http://localhost | 모든 언어 통합 테스트 | ✅ **운영중** |
+| PHP Server | http://localhost:8080 | PHP XSS 엔드포인트 | ✅ 완료 |
+| Node.js Server | http://localhost:3000 | Express XSS 엔드포인트 | ✅ 완료 |
+| Python Server | http://localhost:5000 | Flask XSS 엔드포인트 | ✅ 완료 |
+| Java Server | http://localhost:8081 | Spring Boot XSS 엔드포인트 | ✅ 완료 |
+| Go Server | http://localhost:8082 | Gin XSS 엔드포인트 | ✅ 완료 |
 
-## 🎭 XSS 테스트 시나리오
+## 💻 XSS 엔드포인트 API
 
-- **basic**: 기본 출력
-- **search**: 검색 결과 페이지
-- **greeting**: 사용자 인사말
-- **form**: 폼 입력 결과
-
-## 💣 XSS 페이로드 예시
-
-```javascript
-// 기본 스크립트
-<script>alert("XSS")</script>
-
-// 이미지 태그
-<img src=x onerror=alert("XSS")>
-
-// SVG 태그
-<svg onload=alert("XSS")>
-
-// 속성 우회
-" onmouseover="alert('XSS')" "
-
-// 대소문자 우회
-<ScRiPt>alert("XSS")</ScRiPt>
-```
-
-## 📊 데이터베이스 구성
-
-- **MySQL**: PHP, Java, Go 서버용 관계형 데이터
-- **PostgreSQL**: Python 서버용 고급 SQL 기능
-- **MongoDB**: Node.js, Python 서버용 NoSQL 데이터
-- **Redis**: 세션 캐시 및 임시 데이터 저장
-
-## 🧪 XSS 테스트 결과
-
+### 📡 **모든 언어 공통 API**
 ```bash
-🛡️  XSS 테스트 프레임워크 시작
-📋 XSS 테스트 실행 중...
+# 취약한 엔드포인트
+GET /{language-server}/xss/vulnerable?input=<script>alert("XSS")</script>
 
-🔍 기본 XSS 테스트 - ✅ 성공
-🎭 시나리오별 테스트 - ✅ 성공
-💣 페이로드 테스트 - ✅ 성공
-🛡️ 방어 메커니즘 테스트 - ✅ 성공
-🔓 우회 기법 테스트 - ✅ 성공
-
-📊 테스트 결과:
-   총 테스트: 53
-   성공: 53
-   실패: 0
-   성공률: 100.0%
-
-🎉 모든 테스트가 성공했습니다!
+# 안전한 엔드포인트
+GET /{language-server}/xss/safe?input=<script>alert("XSS")</script>
 ```
+
+### 🔍 **테스트 예시**
+```bash
+# PHP 취약한 엔드포인트
+curl "http://localhost:8080/xss/vulnerable?input=<script>alert('XSS')</script>"
+
+# Node.js 안전한 엔드포인트
+curl "http://localhost:3000/xss/safe?input=<script>alert('XSS')</script>"
+
+# Python 취약한 엔드포인트
+curl "http://localhost:5000/xss/vulnerable?input=<script>alert('XSS')</script>"
+```
+
+## 🚀 현재 구현 현황
+
+### ✅ **Phase 1 완료**
+- [x] **Docker 환경 구축** - Multi-container 네트워크
+- [x] **언어별 서버 구현** - PHP, Node.js, Python, Java, Go
+- [x] **XSS 모듈 완전 구현** - 모든 언어
+- [x] **통합 대시보드** - Vue.js 기반 단일 카드 UI
+- [x] **시각적 공격 흐름도** - Mermaid 다이어그램
+- [x] **실시간 테스트 실행** - 개별 버튼 실행
+
+### 🔄 **Phase 2 계획**
+- [ ] SQL Injection - 다중 언어 확장
+- [ ] Command Injection - 모든 언어
+- [ ] File Upload Vulnerabilities
+- [ ] CSRF Protection Bypass
+
+### 📋 **Phase 3 계획**
+- [ ] Server-Side Template Injection (SSTI)
+- [ ] XXE (XML External Entity)
+- [ ] SSRF (Server-Side Request Forgery)
+- [ ] NoSQL Injection
 
 ## 🔒 보안 주의사항
 
 ⚠️ **경고**: 이 프로젝트는 **교육 목적으로만** 사용해야 합니다.
 
-- 🚫 **프로덕션 환경에서 사용 금지**
-- 🚫 **공개 네트워크에 노출 금지**
-- ✅ **격리된 로컬 환경에서만 사용**
-- ✅ **학습 및 연구 목적으로만 사용**
+### 🚫 **금지사항**
+- 프로덕션 환경에서 사용 금지
+- 공개 네트워크에 노출 금지
+- 실제 웹사이트 공격 도구로 사용 금지
 
-## 🚀 개발 로드맵
+### ✅ **허용사항**
+- 격리된 로컬 환경에서만 사용
+- 학습 및 연구 목적으로만 사용
+- 보안 교육 및 훈련 용도
 
-### Phase 1 (완료) ✅
-- [x] Docker 환경 구축
-- [x] 언어별 서버 기본 구조
-- [x] SQL Injection 모듈 구현 (PHP)
-- [x] XSS 모듈 완전 구현 (PHP) ✨
+## 🎭 XSS 시나리오
 
-### Phase 2 (진행 중) 🔄
-- [ ] XSS 모듈 구현 (Node.js, Python, Java, Go)
-- [ ] Command Injection 모듈 구현
-- [ ] 통합 대시보드 개발
-- [ ] 크로스 언어 비교 기능
+| 시나리오 | 설명 | 실제 사용 예 |
+|----------|------|-------------|
+| **기본 웹페이지** | 사용자 입력을 그대로 출력 | 게시판, 댓글 시스템 |
+| **검색 결과** | 검색어를 결과 페이지에 표시 | 검색 엔진, 쇼핑몰 검색 |
+| **사용자 인사말** | 로그인한 사용자 이름 표시 | 개인화된 환영 메시지 |
+| **폼 입력 결과** | 폼 제출 후 입력값 재표시 | 연락처 폼, 설문조사 |
 
-### Phase 3 (계획) 📋
-- [ ] File Upload 취약점
-- [ ] Directory Traversal
-- [ ] CSRF 보호 우회
-- [ ] 모니터링 시스템
+## 🧪 언어별 XSS 구현 차이점
+
+### 🐘 **PHP**
+```php
+// 취약: 직접 출력
+echo $_GET['input'];
+
+// 안전: HTML 이스케이프
+echo htmlspecialchars($_GET['input'], ENT_QUOTES, 'UTF-8');
+```
+
+### 💚 **Node.js**
+```javascript
+// 취약: 템플릿 리터럴 직접 삽입
+res.send(`<h1>User Input: ${input}</h1>`);
+
+// 안전: HTML 이스케이프 함수 사용
+const escapeHtml = (text) => text.replace(/[&<>"']/g, ...);
+```
+
+### 🐍 **Python**
+```python
+# 취약: f-string 직접 삽입
+return f'<h1>User Input: {user_input}</h1>'
+
+# 안전: html.escape() 사용
+import html
+return f'<h1>User Input: {html.escape(user_input)}</h1>'
+```
+
+### ☕ **Java**
+```java
+// 취약: 문자열 직접 연결
+return "<h1>User Input: " + input + "</h1>";
+
+// 안전: HtmlUtils 사용
+String safeInput = HtmlUtils.htmlEscape(input);
+return "<h1>User Input: " + safeInput + "</h1>";
+```
+
+### 🐹 **Go**
+```go
+// 취약: 직접 출력
+c.String(200, "<h1>User Input: %s</h1>", input)
+
+// 안전: html.EscapeString() 사용
+safeInput := html.EscapeString(input)
+c.String(200, "<h1>User Input: %s</h1>", safeInput)
+```
+
+## 📊 Docker 컨테이너 구성
+
+```mermaid
+graph TB
+    subgraph "🐳 Docker Compose Services"
+        D[websec-dashboard<br/>:80]
+        P[websec-php<br/>:8080]
+        N[websec-nodejs<br/>:3000]
+        Y[websec-python<br/>:5000]
+        J[websec-java<br/>:8081]
+        G[websec-go<br/>:8082]
+        M[websec-mysql<br/>:3306]
+        R[websec-redis<br/>:6379]
+    end
+
+    subgraph "🌐 Network"
+        NET[websec-network<br/>bridge]
+    end
+
+    D -.-> NET
+    P -.-> NET
+    N -.-> NET
+    Y -.-> NET
+    J -.-> NET
+    G -.-> NET
+    M -.-> NET
+    R -.-> NET
+
+    style D fill:#e1f5fe
+    style P fill:#fff3e0
+    style N fill:#e8f5e8
+    style Y fill:#fff8e1
+    style J fill:#fce4ec
+    style G fill:#e3f2fd
+    style M fill:#f3e5f5
+    style R fill:#ffebee
+```
 
 ## 🤝 기여하기
 
@@ -224,29 +357,28 @@ make test-api  # API 테스트 실행
 ## 🙏 감사의 말
 
 - [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) - 실제 공격 페이로드 데이터베이스
-- OWASP 프로젝트
+- OWASP 프로젝트 - 웹 보안 가이드라인
 - 각 언어별 보안 커뮤니티
-- 오픈소스 보안 도구들
+- Vue.js, Bootstrap, Prism.js 오픈소스 프로젝트
+
+---
+
+## 📝 최신 업데이트
+
+### 🎉 **v2.2.0 (2025-09-23)**
+- ✨ **단일 카드 UI 혁신**: 복잡한 Split View → 직관적 단일 카드
+- 🎨 **시각적 공격 흐름도**: 👤→🌐→💻 XSS 동작 원리 시각화
+- 🔗 **5개 언어 XSS 완전 구현**: PHP, Node.js, Python, Java, Go
+- ⚡ **실시간 코드 실행**: 취약/안전 코드 개별 버튼 실행
+- 📱 **반응형 디자인**: 모바일 최적화 완료
+- 🎓 **교육적 가치 극대화**: 공격 원리와 방어 방법 직관적 학습
+
+### v2.1.0 (2024-09-22)
+- 🎉 XSS 모듈 완전 구현 (PHP)
+- ✅ 53개 테스트 100% 성공
+- 🧪 자동화된 테스트 프레임워크 구축
+- 🐳 Docker 환경 통합 및 정리
 
 ---
 
 **WebSec-Lab v2** - 안전한 환경에서 배우는 웹 보안 🛡️
-
----
-
-## 📝 변경 이력
-
-### v2.1.0 (2024-09-22)
-- 🎉 **XSS 모듈 완전 구현** (PHP)
-- ✅ 53개 테스트 100% 성공
-- 🧪 자동화된 테스트 프레임워크 구축
-- 🐳 Docker 환경 통합 및 정리
-- 📋 프로파일 기반 실행 시스템
-
-### v2.0.0-alpha (2024-01-15)
-- 🎉 초기 프로젝트 구조 완성
-- ✅ Docker Compose 환경 구축
-- ✅ PHP 서버 + SQL Injection 모듈 구현
-- ✅ MySQL, PostgreSQL, MongoDB 초기화
-- ✅ PayloadsAllTheThings 통합
-- 📚 기본 문서화 완료
