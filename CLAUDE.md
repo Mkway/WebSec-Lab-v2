@@ -182,6 +182,21 @@ php tests/run_tests.php sql_injection attack_mode
 - 언어별 특성을 살린 구현 방식
 - 실제 CVE 사례와의 비교 설명
 
+### 작업 완료 시 필수 절차
+**🚨 모든 작업 완료 후 반드시 수행해야 할 절차:**
+```bash
+# 1. 변경사항 커밋
+git add .
+git commit -m "작업 내용 간략 설명
+
+🤖 Generated with Claude Code"
+
+# 2. 원격 저장소로 푸시
+git push origin main
+```
+
+**중요**: 모든 개발 작업이 완료되면 반드시 git commit과 push를 수행하여 변경사항을 저장소에 반영해야 합니다. 이는 프로젝트 버전 관리와 팀 협업을 위해 필수적입니다.
+
 ---
 
 이 프롬프트를 참고하여 WebSec-Lab v2 프로젝트를 실전적인 보안 테스트 플랫폼으로 발전시켜 주세요.
