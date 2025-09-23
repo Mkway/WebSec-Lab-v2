@@ -608,7 +608,7 @@ pre::-webkit-scrollbar-thumb:hover {
 
 .test-config-panel .config-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr auto;
+    grid-template-columns: 2fr 2fr auto;
     gap: 15px;
     align-items: end;
 }

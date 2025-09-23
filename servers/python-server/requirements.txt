@@ -30,7 +30,7 @@ Jinja2==3.1.2
 Mako==1.2.4
 
 # Pickle & Serialization (for deserialization testing)
-pickle5==0.0.12
+# pickle5 제거: Python 3.8+에서는 내장 pickle 모듈 사용
 dill==0.3.7
 
 # XML Processing (for XXE testing)

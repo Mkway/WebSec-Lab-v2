@@ -42,8 +42,9 @@
                                 <button
                                     v-for="vuln in vulnerabilities"
                                     :key="vuln.type"
-                                    @click="selectVulnerability(vuln.type)"
-                                    :class="['list-group-item', 'list-group-item-action', activeVuln === vuln.type ? 'active' : '']"
+                                    @click="vuln.status === 'completed' ? selectVulnerability(vuln.type) : null"
+                                    :disabled="vuln.status !== 'completed'"
+                                    :class="['list-group-item', 'list-group-item-action', activeVuln === vuln.type ? 'active' : '', vuln.status !== 'completed' ? 'disabled' : '']"
                                 >
                                     <i :class="vuln.icon"></i> {{ vuln.name }}
                                     <span v-if="vuln.status === 'completed'" class="badge bg-success ms-2">완료</span>
@@ -59,143 +60,106 @@
                 <div class="col-md-9">
                     <!-- XSS Testing Panel -->
                     <div v-if="activeVuln === 'xss'">
-                        <!-- Test Configuration Panel (사용자 친화적) -->
-                        <div class="test-config-panel">
-                            <h5>
-                                <i class="fas fa-bug"></i>
-                                XSS 보안 테스트
-                                <span class="info-tooltip">
-                                    <i class="fas fa-question-circle"></i>
-                                    <span class="tooltip-text">XSS는 악성 스크립트를 웹페이지에 삽입하는 공격입니다</span>
-                                </span>
-                            </h5>
-                            <div class="config-row">
-                                <div>
-                                    <label class="form-label">
-                                        <i class="fas fa-server"></i> 테스트 언어/서버 선택
-                                        <span class="info-tooltip">
-                                            <i class="fas fa-info-circle"></i>
-                                            <span class="tooltip-text">XSS 테스트를 진행할 언어 서버를 선택하세요</span>
-                                        </span>
-                                    </label>
-                                    <select v-model="selectedLanguage" @change="selectLanguage(selectedLanguage)" class="form-select">
-                                        <option v-for="(server, language) in languageServers" :key="language" :value="language">
-                                            {{ server.icon }} {{ server.name }} ({{ server.port }}포트)
-                                            <span v-if="server.status === 'running'">✅</span>
-                                            <span v-else-if="server.status === 'offline'">❌</span>
-                                            <span v-else>⏳</span>
-                                        </option>
-                                    </select>
-                                    <small class="text-muted mt-1">
-                                        상태:
-                                        <span v-if="languageServers[selectedLanguage].status === 'running'" class="text-success">
-                                            <i class="fas fa-circle"></i> 정상 실행 중
-                                        </span>
-                                        <span v-else-if="languageServers[selectedLanguage].status === 'offline'" class="text-danger">
-                                            <i class="fas fa-circle"></i> 서버 오프라인
-                                        </span>
-                                        <span v-else class="text-warning">
-                                            <i class="fas fa-circle"></i> 상태 확인 중...
-                                        </span>
-                                    </small>
-                                </div>
-                                <div>
-                                    <label class="form-label">
-                                        <i class="fas fa-code"></i> 테스트할 코드
-                                        <span class="info-tooltip">
-                                            <i class="fas fa-info-circle"></i>
-                                            <span class="tooltip-text">악성 스크립트 코드를 입력하여 보안 테스트를 진행합니다</span>
-                                        </span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input
-                                            v-model="xssPayload"
-                                            type="text"
-                                            class="form-control"
-                                            placeholder="예: &lt;script&gt;alert('XSS')&lt;/script&gt;"
-                                        >
-                                        <button @click="loadSamplePayload" class="btn btn-outline-secondary">
-                                            <i class="fas fa-flask"></i> 샘플
-                                        </button>
+                        <!-- XSS Test Configuration -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-bug"></i> XSS 보안 테스트
+                                            <span class="ms-2 small">
+                                                <i class="fas fa-info-circle" title="XSS는 악성 스크립트를 웹페이지에 삽입하는 공격입니다"></i>
+                                            </span>
+                                        </h5>
                                     </div>
-                                </div>
-                                <div>
-                                    <label class="form-label">
-                                        <i class="fas fa-theater-masks"></i> 상황 설정
-                                    </label>
-                                    <select v-model="xssScenario" class="form-select">
-                                        <option value="basic">🖥️ 기본 웹페이지 출력</option>
-                                        <option value="search">🔍 검색 결과 페이지</option>
-                                        <option value="greeting">👋 사용자 인사말</option>
-                                        <option value="form">📝 폼 입력 결과</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="form-label">
-                                        <i class="fas fa-balance-scale"></i> 비교 모드
-                                    </label>
-                                    <select v-model="xssMode" class="form-select">
-                                        <option value="both">⚔️ 취약 vs 안전 비교</option>
-                                        <option value="vulnerable">🔓 취약한 코드만</option>
-                                        <option value="safe">🛡️ 안전한 코드만</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <button @click="executeXSSTest" :disabled="isLoading" class="btn btn-danger btn-lg">
-                                        <i class="fas fa-play" v-if="!isLoading"></i>
-                                        <div class="loading-spinner" v-else style="width: 20px; height: 20px; margin: 0; display: inline-block;"></div>
-                                        {{ isLoading ? '테스트 중...' : '🚀 테스트 시작' }}
-                                    </button>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <!-- 서버 선택 -->
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card h-100 border-secondary">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0">
+                                                            <i class="fas fa-server text-primary"></i> 테스트 서버
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <select v-model="selectedLanguage" @change="selectLanguage(selectedLanguage)" class="form-select mb-2">
+                                                            <option v-for="(server, language) in languageServers" :key="language" :value="language">
+                                                                {{ server.icon }} {{ server.name }} ({{ server.port }}포트)
+                                                                {{ server.status === 'running' ? '✅' : server.status === 'offline' ? '❌' : '⏳' }}
+                                                            </option>
+                                                        </select>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge me-2" :class="languageServers[selectedLanguage].status === 'running' ? 'bg-success' : 'bg-danger'">
+                                                                <i class="fas fa-circle"></i>
+                                                                {{ languageServers[selectedLanguage].status === 'running' ? '온라인' : '오프라인' }}
+                                                            </span>
+                                                            <small class="text-muted">포트: {{ languageServers[selectedLanguage].port }}</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 테스트 코드 입력 -->
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card h-100 border-secondary">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0">
+                                                            <i class="fas fa-code text-warning"></i> 테스트 페이로드
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <textarea
+                                                            v-model="xssPayload"
+                                                            class="form-control mb-2"
+                                                            rows="4"
+                                                            placeholder="예: &lt;script&gt;alert('XSS 테스트')&lt;/script&gt;"
+                                                            style="font-family: 'Courier New', monospace; font-size: 13px; resize: vertical;"
+                                                        ></textarea>
+                                                        <div class="d-flex justify-content-end">
+                                                            <button @click="loadSamplePayload" class="btn btn-outline-info btn-sm">
+                                                                <i class="fas fa-flask"></i> 샘플
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 실행 버튼 -->
+                                            <div class="col-md-2 mb-3">
+                                                <div class="card h-100 border-secondary">
+                                                    <div class="card-header bg-light">
+                                                        <h6 class="mb-0">
+                                                            <i class="fas fa-play text-success"></i> 실행
+                                                        </h6>
+                                                    </div>
+                                                    <div class="card-body d-flex align-items-center justify-content-center">
+                                                        <button @click="executeXSSTest" :disabled="isLoading" class="btn btn-danger btn-lg w-100">
+                                                            <i class="fas fa-play" v-if="!isLoading"></i>
+                                                            <div class="spinner-border spinner-border-sm" v-else role="status"></div>
+                                                            <div class="mt-1 small">
+                                                                {{ isLoading ? '테스트 중...' : '시작' }}
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Phase 3: 개선된 실시간 진행 상황 표시 -->
-                        <div v-if="testProgress.show" class="progress-container mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="text-white mb-0">🔄 실시간 테스트 진행 상황</h5>
-                                <div class="text-white-50">
-                                    <i class="fas fa-clock"></i> 예상 소요 시간: ~5초
-                                </div>
+                        <!-- 간단한 프로그레스 바 -->
+                        <div v-if="testProgress.show" class="simple-progress-container mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">🔄 테스트 진행 중...</h6>
+                                <small class="text-muted">~1초</small>
                             </div>
-
-                            <div class="progress-steps">
-                                <div class="progress-line" :style="'--progress-width: ' + getProgressWidth() + '%'"></div>
-                                <div v-for="(step, index) in testProgress.steps" :key="step" class="progress-step">
-                                    <div class="step-circle" :class="getStepClass(step)">
-                                        <span v-if="step === 'request'">📤</span>
-                                        <span v-else-if="step === 'parse'">⚙️</span>
-                                        <span v-else-if="step === 'execute'">▶️</span>
-                                        <span v-else-if="step === 'analyze'">🔍</span>
-                                        <span v-else-if="step === 'result'">📈</span>
-                                    </div>
-                                    <div class="step-label">
-                                        <span v-if="step === 'request'">요청 전송</span>
-                                        <span v-else-if="step === 'parse'">코드 파싱</span>
-                                        <span v-else-if="step === 'execute'">코드 실행</span>
-                                        <span v-else-if="step === 'analyze'">보안 분석</span>
-                                        <span v-else-if="step === 'result'">결과 생성</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 현재 진행 단계 상세 정보 -->
-                            <div class="mt-3 text-white-50 text-center">
-                                <small v-if="testProgress.currentStep === 'request'">
-                                    🚀 서버에 XSS 테스트 요청을 전송하고 있습니다...
-                                </small>
-                                <small v-else-if="testProgress.currentStep === 'parse'">
-                                    🔧 입력된 페이로드를 분석하고 파싱하고 있습니다...
-                                </small>
-                                <small v-else-if="testProgress.currentStep === 'execute'">
-                                    ⚡ 취약한 코드와 안전한 코드에서 동시 실행 중입니다...
-                                </small>
-                                <small v-else-if="testProgress.currentStep === 'analyze'">
-                                    🔬 보안 분석 및 XSS 탐지를 진행하고 있습니다...
-                                </small>
-                                <small v-else-if="testProgress.currentStep === 'result'">
-                                    📊 최종 결과를 생성하고 비교 분석을 완료하고 있습니다...
-                                </small>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                     :style="'width: ' + testProgress.percentage + '%'"
+                                     role="progressbar"></div>
                             </div>
                         </div>
 
@@ -383,13 +347,15 @@
                     <!-- Other Vulnerability Panels -->
                     <div v-else class="card">
                         <div class="card-header">
-                            <h5><i class="fas fa-construction"></i> {{ getVulnName(activeVuln) }}</h5>
+                            <h5><i class="fas fa-info-circle"></i> {{ getVulnName(activeVuln) }}</h5>
                         </div>
                         <div class="card-body text-center">
-                            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
-                            <h5>구현 예정</h5>
-                            <p class="text-muted">이 취약점 테스트는 현재 개발 중입니다.</p>
-                            <small class="text-muted">Phase 2에서 구현될 예정입니다.</small>
+                            <i class="fas fa-code fa-3x text-primary mb-3"></i>
+                            <h5>현재 XSS 테스트가 활성화되어 있습니다</h5>
+                            <p class="text-muted">다른 취약점 테스트는 왼쪽 메뉴에서 "완료" 상태인 항목만 선택 가능합니다.</p>
+                            <button @click="selectVulnerability('xss')" class="btn btn-primary">
+                                <i class="fas fa-code"></i> XSS 테스트로 이동
+                            </button>
                         </div>
                     </div>
                 </div>

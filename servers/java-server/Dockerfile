@@ -9,11 +9,7 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Maven Wrapper 설치
-RUN curl -o /tmp/maven-wrapper.tar.gz \
-    https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.tar.gz && \
-    tar -xzf /tmp/maven-wrapper.tar.gz -C /tmp && \
-    rm /tmp/maven-wrapper.tar.gz
+# Skip Maven Wrapper download - using provided mvnw files
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -48,4 +44,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
 
 # 시작 명령
-CMD ["java", "-jar", "target/websec-java-server.jar"]
+CMD ["java", "-jar", "target/websec-java-server-2.0.0.jar"]

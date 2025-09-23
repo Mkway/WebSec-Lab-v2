@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # PHP 확장 모듈 설치
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install pdo_mysql mysqli mbstring exif pcntl bcmath gd zip
 
 # Redis 확장 설치
 RUN pecl install redis && docker-php-ext-enable redis
@@ -30,6 +30,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 작업 디렉토리 설정
 WORKDIR /var/www/html
+
+# Composer 파일 먼저 복사 (캐시 최적화)
+COPY composer.json composer.lock* ./
+
+# Composer 의존성 설치
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# 애플리케이션 파일 복사
+COPY . .
 
 # Apache 설정
 COPY ./apache.conf /etc/apache2/sites-available/000-default.conf

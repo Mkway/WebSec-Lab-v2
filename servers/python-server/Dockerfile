@@ -41,7 +41,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # 환경 변수 설정
 ENV PYTHONPATH=/app
-ENV FLASK_APP=app.py
+ENV FLASK_APP=src/app.py
 
 # 시작 명령
-CMD ["python", "app.py"]
+CMD ["python", "src/app.py"]

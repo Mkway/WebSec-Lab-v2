@@ -43,6 +43,20 @@ try {
             $controller = new HealthController();
             echo $controller->check();
             break;
+
+        case 'xss':
+            // 간단한 XSS 테스트 엔드포인트 (다른 서버들과 호환)
+            header('Content-Type: text/html');
+            $input = $_GET['input'] ?? '<script>alert("XSS")</script>';
+
+            if (isset($pathParts[1]) && $pathParts[1] === 'safe') {
+                // 안전한 엔드포인트 - HTML 이스케이프
+                echo '<h1>User Input: ' . htmlspecialchars($input, ENT_QUOTES, 'UTF-8') . '</h1>';
+            } else {
+                // 취약한 엔드포인트 - 직접 출력
+                echo '<h1>User Input: ' . $input . '</h1>';
+            }
+            break;
             
         case 'vulnerabilities':
             if (!isset($pathParts[1])) {

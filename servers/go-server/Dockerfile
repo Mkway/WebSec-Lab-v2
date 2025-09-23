@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # 애플리케이션 빌드
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main ./src
 
 # ===== 프로덕션 이미지 =====
 FROM alpine:latest

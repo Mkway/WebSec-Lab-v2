@@ -268,13 +268,13 @@ r.GET("/xss/safe", func(c *gin.Context) {
             ],
             testProgress: {
                 show: false,
-                currentStep: 'request',
-                steps: ['request', 'parse', 'execute', 'analyze', 'result']
+                percentage: 0
             },
             liveTestResult: null
         };
     },
     mounted() {
+        this.initializeVulnerabilities();
         this.checkServerStatus();
         this.checkAllLanguageServers();
         this.loadServerInfo();
@@ -282,6 +282,13 @@ r.GET("/xss/safe", func(c *gin.Context) {
         this.initializePrism();
     },
     methods: {
+        initializeVulnerabilities() {
+            // 카테고리별 취약점을 플랫 리스트로 변환
+            this.vulnerabilities = [];
+            this.vulnerabilityCategories.forEach(category => {
+                this.vulnerabilities.push(...category.vulnerabilities);
+            });
+        },
         selectVulnerability(type) {
             this.activeVuln = type;
             this.xssResult = null;
@@ -318,7 +325,25 @@ r.GET("/xss/safe", func(c *gin.Context) {
                 const response = await fetch(vulnerableUrl, { mode: 'cors' });
                 if (response.ok) {
                     const content = await response.text();
-                    this.liveTestResult = content;
+
+                    // XSS 공격 성공 여부 감지
+                    const hasScript = content.includes('<script>') || content.includes('javascript:') || content.includes('onerror=') || content.includes('onload=');
+                    const isVulnerable = hasScript && content.includes(this.xssPayload);
+
+                    if (isVulnerable) {
+                        // 실제 XSS 실행을 위해 스크립트 태그를 동적으로 생성
+                        this.executeXSSScript(content);
+                        this.liveTestResult = `
+                            <div class="alert alert-success mb-3">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>✅ XSS 공격 실행됨!</strong>
+                                JavaScript alert가 실행되었습니다.
+                            </div>
+                            ${content}
+                        `;
+                    } else {
+                        this.liveTestResult = content;
+                    }
                 } else {
                     this.liveTestResult = `<div class="alert alert-danger">오류: HTTP ${response.status}</div>`;
                 }
@@ -363,16 +388,34 @@ r.GET("/xss/safe", func(c *gin.Context) {
         async checkLanguageServerStatus(language) {
             const server = this.languageServers[language];
 
-            // 현재 실행 중인 서버들
-            const runningServers = ['PHP', 'Node.js'];
+            try {
+                // 실제 서버에 헬스체크 요청
+                const serverUrl = `http://localhost:${server.port}`;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-            if (runningServers.includes(language)) {
-                server.status = 'running';
-            } else {
+                const response = await fetch(`${serverUrl}/`, {
+                    mode: 'cors',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    server.status = 'running';
+                    console.log(`✅ Server ${language}: running`);
+                } else {
+                    server.status = 'offline';
+                    console.log(`❌ Server ${language}: offline (HTTP ${response.status})`);
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log(`⏰ Server ${language}: timeout`);
+                } else {
+                    console.log(`❌ Server ${language} health check failed:`, error.message);
+                }
                 server.status = 'offline';
             }
-
-            console.log(`Server ${language}: ${server.status}`);
         },
 
         // 현재 선택된 언어의 서버 URL 가져오기
@@ -451,8 +494,16 @@ r.GET("/xss/safe", func(c *gin.Context) {
             }
         },
         getVulnName(type) {
+            // vulnerabilities 배열이 아직 초기화되지 않았다면 카테고리에서 직접 찾기
+            if (!this.vulnerabilities.length) {
+                for (const category of this.vulnerabilityCategories) {
+                    const vuln = category.vulnerabilities.find(v => v.type === type);
+                    if (vuln) return vuln.name;
+                }
+            }
+
             const vuln = this.vulnerabilities.find(v => v.type === type);
-            return vuln ? vuln.name : 'Unknown';
+            return vuln ? vuln.name : type.toUpperCase();
         },
         async checkServerStatus() {
             try {
@@ -507,41 +558,24 @@ r.GET("/xss/safe", func(c *gin.Context) {
             };
 
             try {
-                // Step 1: 요청 전송
-                this.updateProgressStep('request');
-                await this.delay(800);
+                // 프로그레스 바 시작
+                this.testProgress.show = true;
+                this.testProgress.percentage = 20;
 
-                const payload = {
-                    payload: this.xssPayload,
-                    mode: this.xssMode,
-                    context: {
-                        scenario: this.xssScenario
-                    }
-                };
+                console.log('🚀 Sending XSS test request:', this.xssPayload);
 
-                console.log('🚀 Sending XSS test request:', payload);
-
-                // Step 2: 코드 파싱
-                this.updateProgressStep('parse');
-                await this.delay(600);
+                // 프로그레스 업데이트
+                this.testProgress.percentage = 60;
 
                 // 선택된 언어 서버로 XSS 테스트 요청
                 const serverUrl = this.getCurrentServerUrl();
                 const testResults = await this.testXSSEndpoints(serverUrl, this.xssPayload);
 
-                // Step 3: 코드 실행
-                this.updateProgressStep('execute');
-                await this.delay(1000);
-
-                // Step 4: 보안 분석
-                this.updateProgressStep('analyze');
-                await this.delay(800);
-
                 console.log('✅ XSS test results:', testResults);
 
-                // Step 5: 결과 생성
-                this.updateProgressStep('result');
-                await this.delay(500);
+                // 프로그레스 완료
+                this.testProgress.percentage = 100;
+                await this.delay(300);
 
                 this.xssResult = {
                     success: true,
@@ -743,6 +777,100 @@ r.GET("/xss/safe", func(c *gin.Context) {
                     alertDiv.parentNode.removeChild(alertDiv);
                 }
             }, 5000);
+        },
+
+        executeXSSScript(content) {
+            // 서버 응답에서 스크립트 추출 및 실행
+            try {
+                // <script> 태그 내용 추출
+                const scriptMatch = content.match(/<script[^>]*>(.*?)<\/script>/gi);
+                if (scriptMatch) {
+                    scriptMatch.forEach(scriptTag => {
+                        const scriptContent = scriptTag.replace(/<script[^>]*>|<\/script>/gi, '');
+                        if (scriptContent.trim()) {
+                            // 실제 JavaScript 실행
+                            eval(scriptContent);
+                        }
+                    });
+                }
+
+                // 인라인 이벤트 핸들러 처리 (onerror, onload 등)
+                const eventMatches = content.match(/on\w+\s*=\s*['"](.*?)['"]/gi);
+                if (eventMatches) {
+                    eventMatches.forEach(eventHandler => {
+                        const jsCode = eventHandler.replace(/on\w+\s*=\s*['"]|['"]/gi, '');
+                        if (jsCode.trim()) {
+                            eval(jsCode);
+                        }
+                    });
+                }
+
+                // javascript: 프로토콜 처리
+                const jsProtocolMatch = content.match(/javascript:\s*(.*?)(?=['"\s>])/gi);
+                if (jsProtocolMatch) {
+                    jsProtocolMatch.forEach(jsCode => {
+                        const code = jsCode.replace(/javascript:\s*/i, '');
+                        if (code.trim()) {
+                            eval(code);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.log('XSS 실행 중 오류:', error.message);
+                // 에러가 발생해도 일반적인 alert는 실행
+                if (this.xssPayload.includes('alert')) {
+                    const alertMatch = this.xssPayload.match(/alert\s*\(\s*['"`](.*?)['"`]\s*\)/);
+                    if (alertMatch) {
+                        alert(`XSS 공격 성공: ${alertMatch[1]}`);
+                    } else {
+                        alert('XSS 공격이 성공했습니다!');
+                    }
+                }
+            }
+        },
+
+        showXSSSuccessAlert() {
+            // XSS 공격 성공 알림
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+            alertDiv.style.cssText = 'top: 140px; right: 20px; z-index: 10001; min-width: 400px; max-width: 500px; box-shadow: 0 8px 32px rgba(255, 193, 7, 0.4);';
+            alertDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-bug fa-2x text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-warning mb-1">
+                            <i class="fas fa-exclamation-triangle"></i> XSS 취약점 발견!
+                        </div>
+                        <div class="small text-warning-emphasis">
+                            스크립트가 서버 응답에 포함되었습니다.<br>
+                            실제 브라우저에서는 JavaScript가 실행됩니다.
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-warning" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+
+            // 진입 애니메이션
+            alertDiv.style.transform = 'translateX(100%)';
+            alertDiv.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            setTimeout(() => {
+                alertDiv.style.transform = 'translateX(0)';
+            }, 10);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 500);
+                }
+            }, 7000);
         },
         showSuccessAlert(message) {
             const alertDiv = document.createElement('div');
