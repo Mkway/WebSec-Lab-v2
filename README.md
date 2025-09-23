@@ -39,8 +39,15 @@ graph TB
     end
 
     subgraph "🗄️ Database Layer"
-        M[(MySQL<br/>:3306)]
-        R[(Redis<br/>:6379)]
+        subgraph "SQL Databases"
+            M[(MySQL<br/>:3306)]
+            PG[(PostgreSQL<br/>:5432)]
+            H2[(H2 Database<br/>Embedded)]
+        end
+        subgraph "NoSQL & Cache"
+            MG[(MongoDB<br/>:27017)]
+            R[(Redis<br/>:6379)]
+        end
     end
 
     subgraph "🐳 Container Network"
@@ -54,7 +61,13 @@ graph TB
     D -.-> G
 
     P --> M
+    N --> MG
+    Y --> PG
+    J --> H2
+    G --> M
+
     P --> R
+    N --> R
 
     P -.- NET
     N -.- NET
@@ -63,6 +76,9 @@ graph TB
     G -.- NET
     D -.- NET
     M -.- NET
+    PG -.- NET
+    H2 -.- NET
+    MG -.- NET
     R -.- NET
 
     style D fill:#e1f5fe
@@ -72,6 +88,9 @@ graph TB
     style J fill:#fce4ec
     style G fill:#e3f2fd
     style M fill:#f3e5f5
+    style PG fill:#e8eaf6
+    style H2 fill:#fff8e1
+    style MG fill:#e0f2f1
     style R fill:#ffebee
 ```
 
@@ -219,8 +238,13 @@ curl "http://localhost:5000/xss/vulnerable?input=<script>alert('XSS')</script>"
 - [x] **시각적 공격 흐름도** - Mermaid 다이어그램
 - [x] **실시간 테스트 실행** - 개별 버튼 실행
 
-### 🔄 **Phase 2 계획**
-- [ ] SQL Injection - 다중 언어 확장
+### 🔄 **Phase 2 진행중**
+- [ ] **SQL Injection** - 다중 데이터베이스 환경
+  - PHP → MySQL
+  - Node.js → MongoDB
+  - Python → PostgreSQL
+  - Java → H2 Database
+  - Go → MySQL
 - [ ] Command Injection - 모든 언어
 - [ ] File Upload Vulnerabilities
 - [ ] CSRF Protection Bypass
