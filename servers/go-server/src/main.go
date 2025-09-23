@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html"
 	"log"
 	"net/http"
 	"os"
@@ -50,14 +51,30 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{
 			"message":   "WebSec-Lab Go Server",
 			"version":   "2.0.0",
-			"endpoints": []string{"/health", "/vulnerabilities"},
+			"endpoints": []string{"/health", "/xss/vulnerable", "/xss/safe"},
 		})
 	})
 
-	r.Any("/vulnerabilities/*path", func(c *gin.Context) {
+	// XSS Test Endpoints
+	r.GET("/xss/vulnerable", func(c *gin.Context) {
+		input := c.DefaultQuery("input", "<script>alert('XSS')</script>")
+		// 취약한 코드 - 직접 출력
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, "<h1>User Input: %s</h1>", input)
+	})
+
+	r.GET("/xss/safe", func(c *gin.Context) {
+		input := c.DefaultQuery("input", "<script>alert('XSS')</script>")
+		// 안전한 코드 - HTML 이스케이프
+		safeInput := html.EscapeString(input)
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, "<h1>User Input: %s</h1>", safeInput)
+	})
+
+	r.GET("/vulnerabilities", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message":   "Vulnerability endpoints coming soon",
-			"available": []string{},
+			"message":   "WebSec-Lab Go Server",
+			"available": []string{"GET /xss/vulnerable", "GET /xss/safe"},
 		})
 	})
 

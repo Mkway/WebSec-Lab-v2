@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
+import html
 from datetime import datetime
 
 # Load environment variables
@@ -29,11 +30,25 @@ def home():
         'endpoints': ['/health', '/vulnerabilities']
     })
 
+# XSS Test Endpoints
+@app.route('/xss/vulnerable', methods=['GET'])
+def xss_vulnerable():
+    user_input = request.args.get('input', '<script>alert("XSS")</script>')
+    # 취약한 코드 - 직접 출력
+    return f'<h1>User Input: {user_input}</h1>'
+
+@app.route('/xss/safe', methods=['GET'])
+def xss_safe():
+    user_input = request.args.get('input', '<script>alert("XSS")</script>')
+    # 안전한 코드 - HTML 이스케이프
+    safe_input = html.escape(user_input)
+    return f'<h1>User Input: {safe_input}</h1>'
+
 @app.route('/vulnerabilities', methods=['GET', 'POST'])
 def vulnerabilities():
     return jsonify({
-        'message': 'Vulnerability endpoints coming soon',
-        'available': []
+        'message': 'WebSec-Lab Python Server',
+        'available': ['GET /xss/vulnerable', 'GET /xss/safe']
     })
 
 if __name__ == '__main__':

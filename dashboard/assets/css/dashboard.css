@@ -400,6 +400,188 @@ pre::-webkit-scrollbar-thumb:hover {
     left: 100%;
 }
 
+/* ==== SIMPLE RESULT UI STYLES ==== */
+
+/* Attack Flow Diagram */
+.attack-flow-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 10px;
+}
+
+.flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-width: 150px;
+}
+
+.step-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.step-label {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 8px;
+}
+
+.step-detail {
+    font-size: 0.9rem;
+    color: var(--muted-color);
+    background: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-family: 'Courier New', monospace;
+}
+
+.step-paths {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.path-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.path-item.vulnerable {
+    background: var(--danger-bg);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-border);
+}
+
+.path-item.safe {
+    background: var(--success-bg);
+    color: var(--success-color);
+    border: 1px solid var(--success-border);
+}
+
+.flow-arrow {
+    font-size: 2rem;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Result Items */
+.result-item {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background: white;
+    border: 2px solid #e9ecef;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.result-status {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.result-status.danger {
+    background: var(--danger-bg);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-border);
+}
+
+.result-status.success {
+    background: var(--success-bg);
+    color: var(--success-color);
+    border: 1px solid var(--success-border);
+}
+
+/* Code Sections */
+.code-section {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.code-section.vulnerable {
+    border: 2px solid var(--danger-border);
+    background: var(--danger-bg);
+}
+
+.code-section.safe {
+    border: 2px solid var(--success-border);
+    background: var(--success-bg);
+}
+
+.code-section h6 {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.code-block {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.code-section .btn {
+    margin-top: 10px;
+}
+
+/* Live Result Display */
+.live-result {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    min-height: 100px;
+    font-family: 'Courier New', monospace;
+    overflow-x: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .attack-flow-diagram {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .flow-arrow {
+        transform: rotate(90deg);
+        font-size: 1.5rem;
+    }
+
+    .step-paths {
+        align-items: center;
+    }
+}
+
 /* ==== PHASE 1: SPLIT VIEW LAYOUT ==== */
 
 /* Test Configuration Panel (Fixed Top) */
@@ -1483,4 +1665,169 @@ code[class*="language-"] {
 .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* XSS Attack Flow Diagram Styles */
+.attack-flow-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+
+.flow-step {
+    text-align: center;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    min-width: 120px;
+}
+
+.step-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.step-label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #495057;
+}
+
+.step-detail {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-family: monospace;
+    background: #f8f9fa;
+    padding: 5px;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+.step-paths {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.path-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.path-item.vulnerable {
+    background: #ffe6e6;
+    border: 1px solid #ff9999;
+    color: #d63384;
+}
+
+.path-item.safe {
+    background: #e6ffe6;
+    border: 1px solid #99ff99;
+    color: #28a745;
+}
+
+.path-icon {
+    font-size: 1.2rem;
+}
+
+.flow-arrow {
+    font-size: 2rem;
+    color: #6c757d;
+    font-weight: bold;
+}
+
+/* Simple Result Styles */
+.result-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.result-status {
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.result-status.danger {
+    background: #ffe6e6;
+    color: #d63384;
+    border: 1px solid #ff9999;
+}
+
+.result-status.success {
+    background: #e6ffe6;
+    color: #28a745;
+    border: 1px solid #99ff99;
+}
+
+/* Code Section Styles */
+.code-section {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
+
+.code-section.vulnerable {
+    border-left: 4px solid #dc3545;
+}
+
+.code-section.safe {
+    border-left: 4px solid #28a745;
+}
+
+.code-block {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    overflow-x: auto;
+}
+
+/* Live Test Result */
+.live-result {
+    background: #fff;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 100px;
+    font-family: Arial, sans-serif;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .attack-flow-diagram {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .flow-arrow {
+        transform: rotate(90deg);
+    }
+
+    .flow-step {
+        min-width: 100%;
+    }
 }

@@ -6,45 +6,220 @@ createApp({
             serverStatus: 'Connected',
             phpStatus: 'Running',
             activeVuln: 'xss',
+            selectedLanguage: 'PHP',
             isLoading: false,
-            vulnerabilities: [
-                {
-                    type: 'xss',
-                    name: 'XSS',
-                    icon: 'fas fa-code',
-                    status: 'completed'
+
+            // 언어별 서버 정보
+            languageServers: {
+                'PHP': {
+                    name: 'PHP',
+                    port: 8080,
+                    status: 'unknown',
+                    icon: '🐘',
+                    color: '#4F5B93',
+                    vulnerableCode: `<?php
+// 취약한 코드 - XSS 공격에 노출
+echo $_GET['input']; // 사용자 입력을 필터링 없이 그대로 출력
+
+// ⚠️ 문제점:
+// 1. 입력 검증 없음
+// 2. HTML 이스케이프 없음
+// 3. 악성 스크립트 실행 가능`,
+                    safeCode: `<?php
+// 안전한 코드 - XSS 공격 방어
+echo htmlspecialchars($_GET['input'], ENT_QUOTES, 'UTF-8');
+
+// ✅ 보안 조치:
+// 1. htmlspecialchars()로 HTML 이스케이프
+// 2. ENT_QUOTES로 따옴표도 변환
+// 3. UTF-8 인코딩 명시`
                 },
-                {
-                    type: 'sql-injection',
-                    name: 'SQL Injection',
-                    icon: 'fas fa-database',
-                    status: 'completed'
+                'Node.js': {
+                    name: 'Node.js',
+                    port: 3000,
+                    status: 'unknown',
+                    icon: '💚',
+                    color: '#68A063',
+                    vulnerableCode: `// 취약한 코드 - XSS 공격에 노출
+app.get('/xss/vulnerable', (req, res) => {
+    const input = req.query.input || '';
+    // 사용자 입력을 필터링 없이 그대로 출력
+    res.send(\`<h1>User Input: \${input}</h1>\`);
+});
+
+// ⚠️ 문제점:
+// 1. 입력 검증 없음
+// 2. HTML 이스케이프 없음
+// 3. 악성 스크립트 실행 가능`,
+                    safeCode: `// 안전한 코드 - XSS 공격 방어
+app.get('/xss/safe', (req, res) => {
+    const input = req.query.input || '';
+    // HTML 이스케이프 처리
+    const escapeHtml = (text) => text.replace(/[&<>"']/g,
+        (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;',
+                  '"': '&quot;', "'": '&#39;' }[m]));
+    res.send(\`<h1>User Input: \${escapeHtml(input)}</h1>\`);
+});
+
+// ✅ 보안 조치:
+// 1. HTML 특수문자 이스케이프
+// 2. 악성 스크립트 무력화`
                 },
-                {
-                    type: 'command-injection',
-                    name: 'Command Injection',
-                    icon: 'fas fa-terminal',
-                    status: 'progress'
+                'Python': {
+                    name: 'Python',
+                    port: 5000,
+                    status: 'unknown',
+                    icon: '🐍',
+                    color: '#3776AB',
+                    vulnerableCode: `# 취약한 코드 - XSS 공격에 노출
+@app.route('/xss/vulnerable')
+def xss_vulnerable():
+    user_input = request.args.get('input', '')
+    # 사용자 입력을 필터링 없이 그대로 출력
+    return f'<h1>User Input: {user_input}</h1>'
+
+# ⚠️ 문제점:
+# 1. 입력 검증 없음
+# 2. HTML 이스케이프 없음
+# 3. 악성 스크립트 실행 가능`,
+                    safeCode: `# 안전한 코드 - XSS 공격 방어
+import html
+
+@app.route('/xss/safe')
+def xss_safe():
+    user_input = request.args.get('input', '')
+    # HTML 이스케이프 처리
+    safe_input = html.escape(user_input)
+    return f'<h1>User Input: {safe_input}</h1>'
+
+# ✅ 보안 조치:
+# 1. html.escape()로 HTML 이스케이프
+# 2. 악성 스크립트 무력화`
                 },
-                {
-                    type: 'file-upload',
-                    name: 'File Upload',
-                    icon: 'fas fa-upload',
-                    status: 'planned'
+                'Java': {
+                    name: 'Java',
+                    port: 8081,
+                    status: 'unknown',
+                    icon: '☕',
+                    color: '#ED8B00',
+                    vulnerableCode: `// 취약한 코드 - XSS 공격에 노출
+@GetMapping("/xss/vulnerable")
+public String xssVulnerable(@RequestParam String input) {
+    // 사용자 입력을 필터링 없이 그대로 출력
+    return "<h1>User Input: " + input + "</h1>";
+}
+
+// ⚠️ 문제점:
+// 1. 입력 검증 없음
+// 2. HTML 이스케이프 없음
+// 3. 악성 스크립트 실행 가능`,
+                    safeCode: `// 안전한 코드 - XSS 공격 방어
+import org.springframework.web.util.HtmlUtils;
+
+@GetMapping("/xss/safe")
+public String xssSafe(@RequestParam String input) {
+    // HTML 이스케이프 처리
+    String safeInput = HtmlUtils.htmlEscape(input);
+    return "<h1>User Input: " + safeInput + "</h1>";
+}
+
+// ✅ 보안 조치:
+// 1. HtmlUtils.htmlEscape()로 HTML 이스케이프
+// 2. 악성 스크립트 무력화`
                 },
+                'Go': {
+                    name: 'Go',
+                    port: 8082,
+                    status: 'unknown',
+                    icon: '🐹',
+                    color: '#00ADD8',
+                    vulnerableCode: `// 취약한 코드 - XSS 공격에 노출
+r.GET("/xss/vulnerable", func(c *gin.Context) {
+    input := c.DefaultQuery("input", "")
+    // 사용자 입력을 필터링 없이 그대로 출력
+    c.Header("Content-Type", "text/html")
+    c.String(200, "<h1>User Input: %s</h1>", input)
+})
+
+// ⚠️ 문제점:
+// 1. 입력 검증 없음
+// 2. HTML 이스케이프 없음
+// 3. 악성 스크립트 실행 가능`,
+                    safeCode: `// 안전한 코드 - XSS 공격 방어
+import "html"
+
+r.GET("/xss/safe", func(c *gin.Context) {
+    input := c.DefaultQuery("input", "")
+    // HTML 이스케이프 처리
+    safeInput := html.EscapeString(input)
+    c.Header("Content-Type", "text/html")
+    c.String(200, "<h1>User Input: %s</h1>", safeInput)
+})
+
+// ✅ 보안 조치:
+// 1. html.EscapeString()로 HTML 이스케이프
+// 2. 악성 스크립트 무력화`
+                }
+            },
+            // 카테고리별 그룹화된 취약점 목록 (VULNERABILITY_PRIORITY.md 기반)
+            vulnerabilityCategories: [
                 {
-                    type: 'directory-traversal',
-                    name: 'Directory Traversal',
-                    icon: 'fas fa-folder-open',
-                    status: 'planned'
-                },
-                {
-                    type: 'object-injection',
-                    name: 'Object Injection',
+                    id: 'injection-attacks',
+                    name: '💉 Injection Attacks',
+                    priority: 'high',
                     icon: 'fas fa-syringe',
-                    status: 'planned'
+                    description: '코드/쿼리 주입 공격',
+                    vulnerabilities: [
+                        { type: 'sql-injection', name: 'SQL Injection', icon: 'fas fa-database', status: 'completed', progress: 20, languages: ['PHP'] },
+                        { type: 'xss', name: 'XSS', icon: 'fas fa-code', status: 'completed', progress: 100, languages: ['PHP', 'Node.js', 'Python', 'Java', 'Go'] },
+                        { type: 'command-injection', name: 'Command Injection', icon: 'fas fa-terminal', status: 'planned', progress: 0, languages: [] },
+                        { type: 'nosql-injection', name: 'NoSQL Injection', icon: 'fas fa-leaf', status: 'planned', progress: 0, languages: [] }
+                    ]
+                },
+                {
+                    id: 'file-system-attacks',
+                    name: '📁 File System Attacks',
+                    priority: 'high',
+                    icon: 'fas fa-folder-open',
+                    description: '파일 시스템 공격',
+                    vulnerabilities: [
+                        { type: 'file-upload', name: 'File Upload', icon: 'fas fa-upload', status: 'planned', progress: 0, languages: [] },
+                        { type: 'directory-traversal', name: 'Path Traversal', icon: 'fas fa-route', status: 'planned', progress: 0, languages: [] },
+                        { type: 'file-inclusion', name: 'File Inclusion', icon: 'fas fa-file-import', status: 'planned', progress: 0, languages: [] }
+                    ]
+                },
+                {
+                    id: 'web-security-bypass',
+                    name: '🌐 Web Security Bypass',
+                    priority: 'medium',
+                    icon: 'fas fa-shield-alt',
+                    description: '웹 보안 메커니즘 우회',
+                    vulnerabilities: [
+                        { type: 'csrf', name: 'CSRF', icon: 'fas fa-exchange-alt', status: 'planned', progress: 0, languages: [] },
+                        { type: 'ssti', name: 'SSTI', icon: 'fas fa-code-branch', status: 'planned', progress: 0, languages: [] },
+                        { type: 'xxe', name: 'XXE', icon: 'fas fa-file-code', status: 'planned', progress: 0, languages: [] },
+                        { type: 'ssrf', name: 'SSRF', icon: 'fas fa-network-wired', status: 'planned', progress: 0, languages: [] }
+                    ]
+                },
+                {
+                    id: 'advanced-attacks',
+                    name: '🔓 Advanced Attacks',
+                    priority: 'low',
+                    icon: 'fas fa-lock-open',
+                    description: '고급 공격 기법',
+                    vulnerabilities: [
+                        { type: 'deserialization', name: 'Insecure Deserialization', icon: 'fas fa-unlink', status: 'planned', progress: 0, languages: [] },
+                        { type: 'ldap-injection', name: 'LDAP Injection', icon: 'fas fa-building', status: 'planned', progress: 0, languages: [] },
+                        { type: 'xpath-injection', name: 'XPath Injection', icon: 'fas fa-sitemap', status: 'planned', progress: 0, languages: [] }
+                    ]
                 }
             ],
+
+            // 현재 활성화된 카테고리
+            activeCategory: 'injection-attacks',
+
+            // 개별 취약점 호환성을 위한 플랫 리스트
+            vulnerabilities: [],
             xssPayload: '<script>alert("XSS")</script>',
             xssMode: 'both',
             xssScenario: 'basic',
@@ -95,11 +270,13 @@ createApp({
                 show: false,
                 currentStep: 'request',
                 steps: ['request', 'parse', 'execute', 'analyze', 'result']
-            }
+            },
+            liveTestResult: null
         };
     },
     mounted() {
         this.checkServerStatus();
+        this.checkAllLanguageServers();
         this.loadServerInfo();
         this.setupMessageListener();
         this.initializePrism();
@@ -108,6 +285,170 @@ createApp({
         selectVulnerability(type) {
             this.activeVuln = type;
             this.xssResult = null;
+        },
+
+        // 언어 선택 기능
+        selectLanguage(language) {
+            this.selectedLanguage = language;
+            this.xssResult = null;
+            console.log(`✅ Selected language: ${language}`);
+        },
+
+        // 언어별 Prism.js 클래스 매핑
+        getLanguageClass(language) {
+            const languageMap = {
+                'PHP': 'php',
+                'Node.js': 'javascript',
+                'Python': 'python',
+                'Java': 'java',
+                'Go': 'go'
+            };
+            return languageMap[language] || 'javascript';
+        },
+
+        // 개별 취약한 엔드포인트 테스트
+        async testVulnerableEndpoint() {
+            this.isLoading = true;
+            this.liveTestResult = null;
+
+            try {
+                const serverUrl = this.getCurrentServerUrl();
+                const vulnerableUrl = `${serverUrl}/xss/vulnerable?input=${encodeURIComponent(this.xssPayload)}`;
+
+                const response = await fetch(vulnerableUrl, { mode: 'cors' });
+                if (response.ok) {
+                    const content = await response.text();
+                    this.liveTestResult = content;
+                } else {
+                    this.liveTestResult = `<div class="alert alert-danger">오류: HTTP ${response.status}</div>`;
+                }
+            } catch (error) {
+                this.liveTestResult = `<div class="alert alert-danger">연결 오류: ${error.message}</div>`;
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        // 개별 안전한 엔드포인트 테스트
+        async testSafeEndpoint() {
+            this.isLoading = true;
+            this.liveTestResult = null;
+
+            try {
+                const serverUrl = this.getCurrentServerUrl();
+                const safeUrl = `${serverUrl}/xss/safe?input=${encodeURIComponent(this.xssPayload)}`;
+
+                const response = await fetch(safeUrl, { mode: 'cors' });
+                if (response.ok) {
+                    const content = await response.text();
+                    this.liveTestResult = content;
+                } else {
+                    this.liveTestResult = `<div class="alert alert-danger">오류: HTTP ${response.status}</div>`;
+                }
+            } catch (error) {
+                this.liveTestResult = `<div class="alert alert-danger">연결 오류: ${error.message}</div>`;
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        // 모든 언어 서버 상태 확인
+        async checkAllLanguageServers() {
+            for (const [language, server] of Object.entries(this.languageServers)) {
+                await this.checkLanguageServerStatus(language);
+            }
+        },
+
+        // 개별 언어 서버 상태 확인
+        async checkLanguageServerStatus(language) {
+            const server = this.languageServers[language];
+
+            // 현재 실행 중인 서버들
+            const runningServers = ['PHP', 'Node.js'];
+
+            if (runningServers.includes(language)) {
+                server.status = 'running';
+            } else {
+                server.status = 'offline';
+            }
+
+            console.log(`Server ${language}: ${server.status}`);
+        },
+
+        // 현재 선택된 언어의 서버 URL 가져오기
+        getCurrentServerUrl() {
+            const server = this.languageServers[this.selectedLanguage];
+            return `http://localhost:${server.port}`;
+        },
+
+        // XSS 엔드포인트 테스트
+        async testXSSEndpoints(serverUrl, payload) {
+            const results = {
+                language: this.selectedLanguage,
+                serverUrl: serverUrl,
+                payload: payload,
+                vulnerable: null,
+                safe: null,
+                comparison: null
+            };
+
+            try {
+                // 직접 취약한 엔드포인트 테스트
+                const vulnerableUrl = `${serverUrl}/xss/vulnerable?input=${encodeURIComponent(payload)}`;
+                const vulnerableResponse = await fetch(vulnerableUrl, { mode: 'cors' });
+
+                if (vulnerableResponse.ok) {
+                    const vulnerableContent = await vulnerableResponse.text();
+                    results.vulnerable = {
+                        success: true,
+                        url: vulnerableUrl,
+                        content: vulnerableContent,
+                        xssExecuted: vulnerableContent.includes(payload)
+                    };
+                } else {
+                    results.vulnerable = {
+                        success: false,
+                        error: `HTTP ${vulnerableResponse.status}`
+                    };
+                }
+
+                // 직접 안전한 엔드포인트 테스트
+                const safeUrl = `${serverUrl}/xss/safe?input=${encodeURIComponent(payload)}`;
+                const safeResponse = await fetch(safeUrl, { mode: 'cors' });
+
+                if (safeResponse.ok) {
+                    const safeContent = await safeResponse.text();
+                    results.safe = {
+                        success: true,
+                        url: safeUrl,
+                        content: safeContent,
+                        xssBlocked: !safeContent.includes(payload)
+                    };
+                } else {
+                    results.safe = {
+                        success: false,
+                        error: `HTTP ${safeResponse.status}`
+                    };
+                }
+
+                // 비교 분석
+                if (results.vulnerable && results.safe) {
+                    results.comparison = {
+                        vulnerabilityDetected: results.vulnerable.xssExecuted,
+                        securityImplemented: results.safe.xssBlocked,
+                        testSuccessful: results.vulnerable.xssExecuted && results.safe.xssBlocked
+                    };
+                }
+
+                return results;
+
+            } catch (error) {
+                console.error(`❌ XSS test failed for ${this.selectedLanguage}:`, error);
+                return {
+                    ...results,
+                    error: error.message
+                };
+            }
         },
         getVulnName(type) {
             const vuln = this.vulnerabilities.find(v => v.type === type);
@@ -184,30 +525,19 @@ createApp({
                 this.updateProgressStep('parse');
                 await this.delay(600);
 
-                const response = await fetch('/api/vulnerabilities/xss', {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
+                // 선택된 언어 서버로 XSS 테스트 요청
+                const serverUrl = this.getCurrentServerUrl();
+                const testResults = await this.testXSSEndpoints(serverUrl, this.xssPayload);
 
                 // Step 3: 코드 실행
                 this.updateProgressStep('execute');
                 await this.delay(1000);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
                 // Step 4: 보안 분석
                 this.updateProgressStep('analyze');
                 await this.delay(800);
 
-                const data = await response.json();
-                console.log('✅ XSS test response:', data);
+                console.log('✅ XSS test results:', testResults);
 
                 // Step 5: 결과 생성
                 this.updateProgressStep('result');
@@ -215,7 +545,7 @@ createApp({
 
                 this.xssResult = {
                     success: true,
-                    data: data
+                    data: testResults
                 };
 
                 // 성공 알림

@@ -30,11 +30,24 @@ app.get('/', (req, res) => {
     });
 });
 
-// Placeholder for vulnerability routes
+// XSS Test Endpoints
+app.get('/xss/vulnerable', (req, res) => {
+    const input = req.query.input || '<script>alert("XSS")</script>';
+    // 취약한 코드 - 직접 출력
+    res.send(`<h1>User Input: ${input}</h1>`);
+});
+
+app.get('/xss/safe', (req, res) => {
+    const input = req.query.input || '<script>alert("XSS")</script>';
+    // 안전한 코드 - HTML 이스케이프
+    const escapeHtml = (text) => text.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    res.send(`<h1>User Input: ${escapeHtml(input)}</h1>`);
+});
+
 app.use('/vulnerabilities', (req, res) => {
     res.json({
-        message: 'Vulnerability endpoints coming soon',
-        available: []
+        message: 'WebSec-Lab Node.js Server',
+        available: ['GET /xss/vulnerable', 'GET /xss/safe']
     });
 });
 
