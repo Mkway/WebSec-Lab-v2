@@ -23,7 +23,7 @@ public class XSSController {
 
     @GetMapping("/vulnerabilities")
     public String vulnerabilities() {
-        return "{\"message\": \"WebSec-Lab Java Server\", \"available\": [\"GET /xss/vulnerable\", \"GET /xss/safe\"]}";
+        return "{\"message\": \"WebSec-Lab Java Server\", \"available\": [\"GET /xss/vulnerable\", \"GET /xss/safe\", \"GET /sql/vulnerable/login\", \"GET /sql/safe/login\", \"GET /sql/vulnerable/search\", \"GET /sql/safe/search\"]}";
     }
 
     @GetMapping("/health")
