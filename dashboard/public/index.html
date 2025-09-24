@@ -368,12 +368,12 @@
                         </div>
 
                     <!-- SQL Injection Testing Panel -->
-                    <div v-else-if="activeVuln === 'sql-injection'" id="sql-injection-container">
+                    <div id="sql-injection-container" :style="{ display: activeVuln === 'sql-injection' ? 'block' : 'none' }">
                         <!-- SQL UI will be inserted here dynamically -->
                     </div>
 
                     <!-- Other Vulnerability Panels -->
-                    <div v-else class="card">
+                    <div v-show="activeVuln !== 'xss' && activeVuln !== 'sql-injection'" class="card">
                         <div class="card-header">
                             <h5><i class="fas fa-info-circle"></i> {{ getVulnName(activeVuln) }}</h5>
                         </div>
@@ -426,6 +426,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/diff-highlight/prism-diff-highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/normalize-whitespace/prism-normalize-whitespace.min.js"></script>
-    <script type="module" src="../assets/js/dashboard.js?v=11"></script>
+    <script type="module" src="../assets/js/dashboard.js?v=16"></script>
 </body>
 </html>

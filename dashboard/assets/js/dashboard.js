@@ -11,7 +11,7 @@ createApp({
         return {
             serverStatus: 'Connected',
             phpStatus: 'Running',
-            activeVuln: 'xss',
+            activeVuln: 'sql-injection',
             selectedLanguage: 'PHP',
             isLoading: false,
 
@@ -25,7 +25,7 @@ createApp({
 
             // 개별 취약점 호환성을 위한 플랫 리스트
             vulnerabilities: [],
-            xssPayload: '<script>alert("XSS")</script>',
+            xssPayload: '&lt;script&gt;alert("XSS")&lt;/script&gt;',
             xssMode: 'both',
             xssScenario: 'basic',
             xssResult: null,
@@ -37,7 +37,7 @@ createApp({
                 {
                     name: '기본 스크립트',
                     icon: '🚀',
-                    code: '<script>alert("XSS")</script>',
+                    code: '&lt;script&gt;alert("XSS")&lt;/script&gt;',
                     description: '가장 기본적인 XSS 공격 코드입니다'
                 },
                 {
@@ -319,10 +319,10 @@ createApp({
         },
         loadSamplePayload() {
             const samples = [
-                '<script>alert("XSS Test")</script>',
+                '&lt;script&gt;alert("XSS Test")&lt;/script&gt;',
                 '<img src=x onerror=alert("IMG XSS")>',
                 '<svg onload=alert("SVG XSS")>',
-                '"><script>alert("Attribute XSS")</script>',
+                '">&lt;script&gt;alert("Attribute XSS")&lt;/script&gt;',
                 'javascript:alert("JavaScript XSS")',
                 '<iframe src="javascript:alert(\'IFRAME XSS\')"></iframe>'
             ];
