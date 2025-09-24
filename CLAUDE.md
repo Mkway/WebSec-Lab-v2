@@ -15,6 +15,15 @@ WebSec-Lab-v2/
 │   ├── python-server/           # Python 서버 (포트: 5000)
 │   ├── java-server/             # Java 서버 (포트: 8081)
 │   └── go-server/               # Go 서버 (포트: 8082)
+├── dashboard/                   # Vue.js 통합 대시보드
+│   ├── public/                  # 정적 파일
+│   ├── src/                     # Vue 소스 코드
+│   │   ├── components/          # Vue 컴포넌트
+│   │   ├── views/               # 페이지 뷰
+│   │   ├── router/              # Vue Router
+│   │   └── assets/              # 정적 리소스
+│   ├── vue.config.js            # Vue 설정 파일
+│   └── package.json             # Vue 의존성
 ├── database/                    # 데이터베이스 초기화 스크립트
 ├── docs/                        # 프로젝트 문서
 ├── scripts/                     # 유틸리티 스크립트
@@ -38,6 +47,9 @@ WebSec-Lab-v2/
 ```bash
 # 개발 환경 시작
 make dev-up
+
+# Vue 대시보드 개발 서버 시작
+cd dashboard && npm run serve
 
 # 전체 테스트 실행
 make test-all
@@ -156,13 +168,98 @@ php tests/run_tests.php sql_injection attack_mode
 - **우회 기법**: 다양한 필터링 우회 방법 테스트
 - **페이로드 변형**: 인코딩, 난독화된 페이로드 테스트
 
+## 🎨 Vue.js 대시보드 개발 가이드
+
+### Vue 프로젝트 설정
+```javascript
+// vue.config.js - 브라우저 캐싱 문제 해결
+const { defineConfig } = require('@vue/cli-service');
+
+module.exports = defineConfig({
+    filenameHashing: true,
+    publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
+    configureWebpack: (config) => {
+        if (process.env.NODE_ENV === "production") {
+            // 프로덕션 빌드 시 파일명에 해시 추가
+            config.output.filename = "js/[name].[hash].js";
+            config.output.chunkFilename = "js/[name].[hash].js";
+        }
+    },
+    devServer: {
+        port: 8083,
+        host: '0.0.0.0',
+        proxy: {
+            '/api/php': {
+                target: 'http://localhost:8080',
+                changeOrigin: true
+            },
+            '/api/node': {
+                target: 'http://localhost:3000',
+                changeOrigin: true
+            },
+            '/api/python': {
+                target: 'http://localhost:5000',
+                changeOrigin: true
+            },
+            '/api/java': {
+                target: 'http://localhost:8081',
+                changeOrigin: true
+            },
+            '/api/go': {
+                target: 'http://localhost:8082',
+                changeOrigin: true
+            }
+        }
+    }
+});
+```
+
+### Vue 개발 주의사항
+- **캐싱 문제**: vue.config.js 수정 후 반드시 개발 서버 재시작 (`npm run serve`)
+- **파일명 해시**: 프로덕션 빌드에서만 적용되어 브라우저 캐싱 문제 해결
+- **개발자 도구**: Network 탭에서 JavaScript 파일 변경사항 확인 필수
+- **API 프록시**: 개발 서버에서 백엔드 API 호출을 위한 프록시 설정
+
+### Vue 컴포넌트 구조
+```
+dashboard/src/
+├── components/
+│   ├── VulnerabilityCard.vue    # 취약점 카드 컴포넌트
+│   ├── TestResult.vue           # 테스트 결과 표시
+│   ├── PayloadInput.vue         # 페이로드 입력
+│   └── ServerStatus.vue         # 서버 상태 표시
+├── views/
+│   ├── Dashboard.vue            # 메인 대시보드
+│   ├── SQLInjection.vue         # SQL 인젝션 테스트
+│   ├── XSSTest.vue              # XSS 테스트
+│   └── CommandInjection.vue     # 명령어 인젝션
+└── router/
+    └── index.js                 # Vue Router 설정
+```
+
+### Vue 개발 명령어
+```bash
+# Vue 프로젝트 의존성 설치
+cd dashboard && npm install
+
+# 개발 서버 시작 (포트: 8083)
+npm run serve
+
+# 프로덕션 빌드
+npm run build
+
+# 빌드 파일 확인
+npm run build && ls -la dist/
+```
+
 ## 🎯 Claude Code 작업 시 가이드
 
 ### 우선순위
 1. **기존 코드 이해**: 현재 구조와 패턴 파악 후 일관성 유지
 2. **실전 중심**: 실제 공격이 성공하는 완전한 취약점 구현
-3. **문서화**: 모든 변경사항에 대한 명확한 설명
-4. **테스트**: 구현과 동시에 공격 테스트 케이스 작성
+3. **Vue 통합**: 대시보드에서 모든 취약점을 시각적으로 테스트 가능
+4. **문서화**: 모든 변경사항에 대한 명확한 설명
+5. **테스트**: 구현과 동시에 공격 테스트 케이스 작성
 
 ### 구현 원칙
 - 실제 침투 테스트에서 사용되는 기법 반영

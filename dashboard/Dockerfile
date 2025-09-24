@@ -11,6 +11,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # 웹 파일 복사
 COPY public/ /usr/share/nginx/html/
 COPY assets/ /usr/share/nginx/html/assets/
+COPY components/ /usr/share/nginx/html/components/
 
 # 포트 노출
 EXPOSE 80

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSec-Lab v2 - Simple Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🛡️ WebSec-Lab v2 - Simple Dashboard</h1>
+            <p>실전 웹 보안 취약점 테스트 플랫폼</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+                <h3>🎯 취약점 유형</h3>
+                <div class="vulnerability-sidebar">
+                    <div class="vuln-sidebar-item active" data-type="sql-injection">
+                        <div class="vuln-sidebar-icon">💉</div>
+                        <div class="vuln-sidebar-info">
+                            <div class="vuln-sidebar-name">SQL Injection</div>
+                            <div class="vuln-sidebar-desc">데이터베이스 조작</div>
+                        </div>
+                    </div>
+                    <div class="vuln-sidebar-item" data-type="xss">
+                        <div class="vuln-sidebar-icon">🔥</div>
+                        <div class="vuln-sidebar-info">
+                            <div class="vuln-sidebar-name">Cross-Site Scripting</div>
+                            <div class="vuln-sidebar-desc">스크립트 실행</div>
+                        </div>
+                    </div>
+                    <div class="vuln-sidebar-item" data-type="command-injection" disabled>
+                        <div class="vuln-sidebar-icon">⚡</div>
+                        <div class="vuln-sidebar-info">
+                            <div class="vuln-sidebar-name">Command Injection</div>
+                            <div class="vuln-sidebar-desc">곧 지원 예정</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Controls -->
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="language">🌐 언어 선택:</label>
+                        <select id="language">
+                            <option value="php">🐘 PHP (Port 8080)</option>
+                            <option value="nodejs">🟢 Node.js (Port 3000)</option>
+                            <option value="python">🐍 Python (Port 5000)</option>
+                            <option value="java">☕ Java (Port 8081)</option>
+                            <option value="go">🔵 Go (Port 8082)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Vulnerability Specific Inputs -->
+                <div id="sql-inputs" class="vuln-inputs">
+                    <h3>💉 SQL Injection 테스트</h3>
+                    <div class="input-group">
+                        <label for="sql-username">사용자명:</label>
+                        <input type="text" id="sql-username" value="admin' OR '1'='1" placeholder="SQL 인젝션 페이로드">
+                    </div>
+                    <div class="input-group">
+                        <label for="sql-password">비밀번호:</label>
+                        <input type="text" id="sql-password" value="' OR '1'='1" placeholder="SQL 인젝션 페이로드">
+                    </div>
+                    <div class="quick-payloads">
+                        <h4>빠른 페이로드:</h4>
+                        <button onclick="applySqlPayload('basic')">기본 우회</button>
+                        <button onclick="applySqlPayload('comment')">주석 우회</button>
+                        <button onclick="applySqlPayload('union')">UNION 공격</button>
+                    </div>
+                </div>
+
+                <div id="xss-inputs" class="vuln-inputs" style="display: none;">
+                    <h3>🔥 XSS 테스트</h3>
+                    <div class="input-group">
+                        <label for="xss-payload">XSS 페이로드:</label>
+                        <textarea id="xss-payload" placeholder="XSS 페이로드를 입력하세요">&lt;script&gt;alert("XSS")&lt;/script&gt;</textarea>
+                    </div>
+                    <div class="quick-payloads">
+                        <h4>빠른 페이로드:</h4>
+                        <button onclick="applyXssPayload('basic')">기본 스크립트</button>
+                        <button onclick="applyXssPayload('img')">이미지 오류</button>
+                        <button onclick="applyXssPayload('svg')">SVG 로드</button>
+                    </div>
+                </div>
+
+                <!-- Test Button -->
+                <div class="test-section">
+                    <button id="test-btn" onclick="runTest()" class="test-button">
+                        🔍 취약점 분석 실행 (취약한 코드 vs 안전한 코드)
+                    </button>
+                    <div id="loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        취약한 코드와 안전한 코드를 동시에 테스트하고 있습니다...
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="results" class="results-section" style="display: none;">
+                    <h3>📊 비교 분석 결과</h3>
+                    <div id="results-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server Status -->
+        <div class="server-status">
+            <h3>🖥️ 서버 상태</h3>
+            <div id="server-status-content">
+                서버 상태 확인 중...
+            </div>
+        </div>
+    </div>
+
+    <script src="js/vulnerability-renderer.js"></script>
+    <script src="js/comparison-renderer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
