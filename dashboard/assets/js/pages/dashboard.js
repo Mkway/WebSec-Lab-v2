@@ -210,16 +210,26 @@ export const DashboardPage = {
         if (!statusElement) return;
 
         try {
+            // Show loading state
+            statusElement.className = 'badge bg-secondary';
+            statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 확인중';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
             const response = await fetch(`http://localhost:${server.port}/health`, {
                 method: 'GET',
                 mode: 'cors',
-                timeout: 5000
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (response.ok) {
                 server.status = 'running';
                 statusElement.className = 'badge bg-success';
                 statusElement.innerHTML = '<i class="fas fa-circle"></i> 실행중';
+                console.log(`✅ ${name} server is online`);
             } else {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -227,7 +237,7 @@ export const DashboardPage = {
             server.status = 'offline';
             statusElement.className = 'badge bg-danger';
             statusElement.innerHTML = '<i class="fas fa-circle"></i> 오프라인';
-            console.warn(`Server ${name} is offline:`, error.message);
+            console.warn(`❌ ${name} server is offline:`, error.name === 'AbortError' ? 'Timeout' : error.message);
         }
     }
 };

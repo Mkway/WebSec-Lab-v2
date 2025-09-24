@@ -60,10 +60,52 @@ export const NavigationComponent = {
                         <!-- Right Side Items -->
                         <ul class="navbar-nav">
                             <!-- Server Status -->
-                            <li class="nav-item">
-                                <span class="nav-link" id="server-status-indicator">
-                                    <i class="fas fa-circle text-success"></i> 서버 연결됨
-                                </span>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false" id="server-status-indicator">
+                                    <i class="fas fa-circle text-warning animate-pulse"></i> 서버 확인중
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><h6 class="dropdown-header">서버 상태</h6></li>
+                                    <li id="php-server-status">
+                                        <span class="dropdown-item">
+                                            <i class="fas fa-spinner fa-spin text-muted me-2"></i>PHP Server
+                                            <span class="badge bg-secondary ms-auto">확인중</span>
+                                        </span>
+                                    </li>
+                                    <li id="nodejs-server-status">
+                                        <span class="dropdown-item">
+                                            <i class="fas fa-spinner fa-spin text-muted me-2"></i>Node.js Server
+                                            <span class="badge bg-secondary ms-auto">확인중</span>
+                                        </span>
+                                    </li>
+                                    <li id="python-server-status">
+                                        <span class="dropdown-item">
+                                            <i class="fas fa-spinner fa-spin text-muted me-2"></i>Python Server
+                                            <span class="badge bg-secondary ms-auto">확인중</span>
+                                        </span>
+                                    </li>
+                                    <li id="java-server-status">
+                                        <span class="dropdown-item">
+                                            <i class="fas fa-spinner fa-spin text-muted me-2"></i>Java Server
+                                            <span class="badge bg-secondary ms-auto">확인중</span>
+                                        </span>
+                                    </li>
+                                    <li id="go-server-status">
+                                        <span class="dropdown-item">
+                                            <i class="fas fa-spinner fa-spin text-muted me-2"></i>Go Server
+                                            <span class="badge bg-secondary ms-auto">확인중</span>
+                                        </span>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <span class="dropdown-item">
+                                            <button class="btn btn-sm btn-outline-primary w-100" onclick="NavigationComponent.checkAllServers()">
+                                                <i class="fas fa-sync-alt"></i> 상태 새로고침
+                                            </button>
+                                        </span>
+                                    </li>
+                                </ul>
                             </li>
 
                             <!-- Settings -->
@@ -176,57 +218,106 @@ export const NavigationComponent = {
 
     // Setup server status monitoring
     setupServerStatusMonitoring() {
+        // Initial check
+        this.checkAllServers();
+
+        // Check every 30 seconds
+        setInterval(() => {
+            this.checkAllServers();
+        }, 30000);
+    },
+
+    // Check all servers and update UI
+    async checkAllServers() {
+        const servers = [
+            { name: 'PHP', key: 'php', port: 8080, icon: '🐘' },
+            { name: 'Node.js', key: 'nodejs', port: 3000, icon: '💚' },
+            { name: 'Python', key: 'python', port: 5000, icon: '🐍' },
+            { name: 'Java', key: 'java', port: 8081, icon: '☕' },
+            { name: 'Go', key: 'go', port: 8082, icon: '🐹' }
+        ];
+
+        let onlineCount = 0;
+        const totalCount = servers.length;
+
+        // Check each server
+        for (const server of servers) {
+            const isOnline = await this.checkSingleServer(server);
+            if (isOnline) onlineCount++;
+        }
+
+        // Update main status indicator
+        this.updateMainStatusIndicator(onlineCount, totalCount);
+    },
+
+    // Check single server status
+    async checkSingleServer(server) {
+        const statusElement = document.getElementById(`${server.key}-server-status`);
+        if (!statusElement) return false;
+
+        try {
+            // Show loading state
+            statusElement.innerHTML = `
+                <span class="dropdown-item">
+                    <i class="fas fa-spinner fa-spin text-muted me-2"></i>${server.icon} ${server.name}
+                    <span class="badge bg-secondary ms-auto">확인중</span>
+                </span>
+            `;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(`http://localhost:${server.port}/health`, {
+                method: 'GET',
+                mode: 'cors',
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                // Server is online
+                statusElement.innerHTML = `
+                    <span class="dropdown-item">
+                        <i class="fas fa-circle text-success me-2"></i>${server.icon} ${server.name}
+                        <span class="badge bg-success ms-auto">온라인</span>
+                    </span>
+                `;
+                return true;
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+        } catch (error) {
+            // Server is offline
+            statusElement.innerHTML = `
+                <span class="dropdown-item">
+                    <i class="fas fa-circle text-danger me-2"></i>${server.icon} ${server.name}
+                    <span class="badge bg-danger ms-auto">오프라인</span>
+                </span>
+            `;
+            console.warn(`${server.name} server is offline:`, error.message);
+            return false;
+        }
+    },
+
+    // Update main status indicator
+    updateMainStatusIndicator(onlineCount, totalCount) {
         const statusIndicator = document.getElementById('server-status-indicator');
         if (!statusIndicator) return;
 
-        // Check server status periodically
-        const checkStatus = async () => {
-            let totalServers = 0;
-            let onlineServers = 0;
+        if (onlineCount === totalCount) {
+            statusIndicator.innerHTML = '<i class="fas fa-circle text-success"></i> 모든 서버 온라인';
+            statusIndicator.className = 'nav-link dropdown-toggle text-success';
+        } else if (onlineCount > 0) {
+            statusIndicator.innerHTML = `<i class="fas fa-circle text-warning"></i> ${onlineCount}/${totalCount} 서버 온라인`;
+            statusIndicator.className = 'nav-link dropdown-toggle text-warning';
+        } else {
+            statusIndicator.innerHTML = '<i class="fas fa-circle text-danger"></i> 서버 오프라인';
+            statusIndicator.className = 'nav-link dropdown-toggle text-danger';
+        }
 
-            const servers = [
-                { name: 'PHP', port: 8080 },
-                { name: 'Node.js', port: 3000 },
-                { name: 'Python', port: 5000 },
-                { name: 'Java', port: 8081 },
-                { name: 'Go', port: 8082 }
-            ];
-
-            for (const server of servers) {
-                totalServers++;
-                try {
-                    const response = await fetch(`http://localhost:${server.port}/health`, {
-                        method: 'GET',
-                        mode: 'cors',
-                        signal: AbortSignal.timeout(3000)
-                    });
-
-                    if (response.ok) {
-                        onlineServers++;
-                    }
-                } catch (error) {
-                    // Server is offline
-                }
-            }
-
-            // Update status indicator
-            if (onlineServers === totalServers) {
-                statusIndicator.innerHTML = '<i class="fas fa-circle text-success"></i> 모든 서버 온라인';
-                statusIndicator.className = 'nav-link text-success';
-            } else if (onlineServers > 0) {
-                statusIndicator.innerHTML = `<i class="fas fa-circle text-warning"></i> ${onlineServers}/${totalServers} 서버 온라인`;
-                statusIndicator.className = 'nav-link text-warning';
-            } else {
-                statusIndicator.innerHTML = '<i class="fas fa-circle text-danger"></i> 서버 오프라인';
-                statusIndicator.className = 'nav-link text-danger';
-            }
-        };
-
-        // Initial check
-        checkStatus();
-
-        // Check every 30 seconds
-        setInterval(checkStatus, 30000);
+        console.log(`📊 Server status: ${onlineCount}/${totalCount} online`);
     },
 
     // Toggle theme

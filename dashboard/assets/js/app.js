@@ -1,9 +1,9 @@
 // Main Application Entry Point
-import { router } from './router.js?v=3';
-import { NavigationComponent } from './components/navigation.js?v=3';
-import { DashboardPage } from './pages/dashboard.js?v=3';
-import { SQLInjectionPage } from './pages/sql-injection.js?v=3';
-import { XSSPage } from './pages/xss.js?v=3';
+import { router } from './router.js?v=4';
+import { NavigationComponent } from './components/navigation.js?v=4';
+import { DashboardPage } from './pages/dashboard.js?v=4';
+import { SQLInjectionPage } from './pages/sql-injection.js?v=4';
+import { XSSPage } from './pages/xss.js?v=4';
 
 // Application Class
 class WebSecLabApp {

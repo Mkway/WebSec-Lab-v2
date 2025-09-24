@@ -10,7 +10,7 @@ export const languageServers = {
     },
     'Node.js': {
         name: 'Node.js',
-        port: 3000,
+        port: 3001,
         status: 'unknown',
         icon: '💚',
         color: '#68A063',
@@ -18,7 +18,7 @@ export const languageServers = {
     },
     'Python': {
         name: 'Python',
-        port: 5000,
+        port: 5001,
         status: 'unknown',
         icon: '🐍',
         color: '#3776AB',

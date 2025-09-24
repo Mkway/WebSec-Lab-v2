@@ -16,16 +16,13 @@ WORKDIR /app
 
 # pom.xml 복사 및 의존성 다운로드 (캐시 최적화)
 COPY pom.xml ./
-COPY mvnw ./
-COPY .mvn ./.mvn
-RUN chmod +x mvnw
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # 애플리케이션 소스 복사
 COPY src ./src
 
 # 애플리케이션 빌드
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # 사용자 생성 및 권한 설정
 RUN adduser --disabled-password --gecos '' appuser && \
