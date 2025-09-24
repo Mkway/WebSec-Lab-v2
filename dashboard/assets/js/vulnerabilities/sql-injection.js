@@ -279,9 +279,10 @@ export class SQLInjectionModule {
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="row">
+                        <!-- 실행 결과 -->
+                        <div class="row mb-3">
                             <div class="col-md-8">
-                                <strong>결과:</strong>
+                                <strong>📊 실행 결과:</strong>
                                 <div class="bg-light p-2 rounded mt-1">
                                     <code>${result.result}</code>
                                 </div>
@@ -295,8 +296,64 @@ export class SQLInjectionModule {
                             </div>
                         </div>
 
+                        <!-- 실제 SQL 구문 표시 -->
+                        <div class="mt-3">
+                            <strong>🔍 실제 실행된 SQL 구문:</strong>
+                            <div class="bg-dark text-light p-2 rounded mt-1">
+                                <code class="text-warning">${this.generateActualSQL(result.language, result.payloadUsed, result.mode)}</code>
+                            </div>
+                        </div>
+
+                        <!-- 코드 예시 표시 -->
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm btn-outline-danger" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#vulnerable-code-${result.language.replace('.', '-')}"
+                                            aria-expanded="false">
+                                        <i class="fas fa-exclamation-triangle"></i> 취약한 코드 보기
+                                    </button>
+                                    <div class="collapse mt-2" id="vulnerable-code-${result.language.replace('.', '-')}">
+                                        <div class="code-container">
+                                            <div class="code-header">
+                                                <span class="code-filename">
+                                                    <i class="fas fa-file-code"></i>
+                                                    vulnerable.${this.getFileExtension(result.language)}
+                                                </span>
+                                                <span class="vulnerability-badge badge bg-danger">
+                                                    <i class="fas fa-exclamation-triangle"></i> 취약점 존재
+                                                </span>
+                                            </div>
+                                            <pre class="line-numbers"><code class="language-${VulnerabilityUtils.getLanguageClass(result.language)}">${this.getVulnerableCode(result.language)}</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-sm btn-outline-success" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#safe-code-${result.language.replace('.', '-')}"
+                                            aria-expanded="false">
+                                        <i class="fas fa-shield-alt"></i> 안전한 코드 보기
+                                    </button>
+                                    <div class="collapse mt-2" id="safe-code-${result.language.replace('.', '-')}">
+                                        <div class="code-container">
+                                            <div class="code-header">
+                                                <span class="code-filename">
+                                                    <i class="fas fa-file-code"></i>
+                                                    safe.${this.getFileExtension(result.language)}
+                                                </span>
+                                                <span class="vulnerability-badge badge bg-success">
+                                                    <i class="fas fa-shield-alt"></i> 보안 적용
+                                                </span>
+                                            </div>
+                                            <pre class="line-numbers"><code class="language-${VulnerabilityUtils.getLanguageClass(result.language)}">${this.getSafeCode(result.language)}</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         ${result.rawResponse ? `
-                            <div class="mt-2">
+                            <div class="mt-3">
                                 <button class="btn btn-sm btn-outline-info" type="button"
                                         data-bs-toggle="collapse" data-bs-target="#raw-${result.language.replace('.', '-')}"
                                         aria-expanded="false">
@@ -499,6 +556,116 @@ if rows.Next() {
                 </div>
             </div>
         `;
+    }
+
+    // 실제 실행된 SQL 구문 생성
+    generateActualSQL(language, payload, mode) {
+        const safePayload = payload || 'admin';
+
+        switch (language) {
+            case 'PHP':
+            case 'Go':
+                // MySQL 기반
+                return `SELECT * FROM users WHERE username = '${safePayload}' AND password = 'password'`;
+
+            case 'Node.js':
+                // MongoDB 기반
+                try {
+                    const parsedPayload = JSON.parse(safePayload);
+                    return `db.users.findOne({ username: ${JSON.stringify(parsedPayload)}, password: "password" })`;
+                } catch {
+                    return `db.users.findOne({ username: "${safePayload}", password: "password" })`;
+                }
+
+            case 'Python':
+                // PostgreSQL 기반
+                return `SELECT * FROM users WHERE username = '${safePayload}' AND password = 'password'`;
+
+            case 'Java':
+                // H2 Database 기반
+                return `SELECT * FROM users WHERE username = '${safePayload}' AND password = 'password'`;
+
+            default:
+                return `SELECT * FROM users WHERE username = '${safePayload}' AND password = 'password'`;
+        }
+    }
+
+    // 파일 확장자 반환
+    getFileExtension(language) {
+        const extensions = {
+            'PHP': 'php',
+            'Node.js': 'js',
+            'Python': 'py',
+            'Java': 'java',
+            'Go': 'go'
+        };
+        return extensions[language] || 'txt';
+    }
+
+    // 취약한 코드 반환
+    getVulnerableCode(language) {
+        const codeExamples = this.showImplementationCode(language);
+        // HTML에서 취약한 코드 부분만 추출
+        const match = codeExamples.match(/vulnerable">(.*?)<\/code>/s);
+        if (match) {
+            return match[1].replace(/<[^>]*>/g, '').trim();
+        }
+
+        // fallback
+        switch (language) {
+            case 'PHP':
+                return `$sql = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+mysqli_query($connection, $sql);`;
+            case 'Node.js':
+                return `const query = { username: username, password: password };
+const user = await db.collection('users').findOne(query);`;
+            case 'Python':
+                return `query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+cursor.execute(query)`;
+            case 'Java':
+                return `String sql = "SELECT * FROM users WHERE username = '" + username + "' AND password = '" + password + "'";
+Statement stmt = connection.createStatement();`;
+            case 'Go':
+                return `query := fmt.Sprintf("SELECT * FROM users WHERE username = '%s' AND password = '%s'", username, password)
+rows, err := db.Query(query)`;
+            default:
+                return '// 취약한 코드 예시가 없습니다.';
+        }
+    }
+
+    // 안전한 코드 반환
+    getSafeCode(language) {
+        const codeExamples = this.showImplementationCode(language);
+        // HTML에서 안전한 코드 부분만 추출
+        const match = codeExamples.match(/safe">(.*?)<\/code>/s);
+        if (match) {
+            return match[1].replace(/<[^>]*>/g, '').trim();
+        }
+
+        // fallback
+        switch (language) {
+            case 'PHP':
+                return `$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
+$stmt->execute([$username, $password]);`;
+            case 'Node.js':
+                return `const query = {
+    username: { $eq: username },
+    password: { $eq: password }
+};
+const user = await db.collection('users').findOne(query);`;
+            case 'Python':
+                return `query = "SELECT * FROM users WHERE username = %s AND password = %s"
+cursor.execute(query, (username, password))`;
+            case 'Java':
+                return `String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+PreparedStatement pstmt = connection.prepareStatement(sql);
+pstmt.setString(1, username);`;
+            case 'Go':
+                return `query := "SELECT * FROM users WHERE username = ? AND password = ?"
+rows, err := db.Query(query, username, password)`;
+            default:
+                return '// 안전한 코드 예시가 없습니다.';
+        }
     }
 
     // 결과 초기화
