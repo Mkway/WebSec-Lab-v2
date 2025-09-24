@@ -460,6 +460,17 @@ r.GET("/xss/safe", func(c *gin.Context) {
             }, 3000);
         }
     }
+
+    // XSS 인터페이스 렌더링 (현재는 HTML에 하드코딩되어 있음)
+    renderInterface() {
+        return '<div class="alert alert-info">XSS 테스트는 현재 페이지 상단에서 이용할 수 있습니다.</div>';
+    }
+
+    // 이벤트 핸들러 초기화 (현재는 HTML에서 직접 처리)
+    initializeEventHandlers() {
+        // XSS 관련 이벤트는 Vue 컴포넌트에서 직접 처리됨
+        console.log('XSS module event handlers initialized');
+    }
 }
 
 // 전역 인스턴스 생성

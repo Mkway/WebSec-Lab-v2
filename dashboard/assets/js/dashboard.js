@@ -3,8 +3,8 @@ const { createApp } = Vue;
 // Import modular components
 import { languageServers, vulnerabilityCategories } from './config/servers.js?v=5';
 import { VulnerabilityUtils } from './vulnerabilities/common.js?v=5';
-import { xssModule } from './vulnerabilities/xss.js?v=5';
-import { sqlInjectionModule } from './vulnerabilities/sql-injection.js?v=5';
+import { xssModule } from './vulnerabilities/xss.js?v=8';
+import { sqlInjectionModule } from './vulnerabilities/sql-injection.js?v=8';
 
 createApp({
     data() {
@@ -102,6 +102,12 @@ createApp({
         selectVulnerability(type) {
             this.activeVuln = type;
             this.xssResult = null;
+
+            // 다음 틱에서 취약점 모듈 초기화 및 UI 렌더링
+            this.$nextTick(() => {
+                this.initializeVulnerabilityModule(type);
+                this.renderVulnerabilityUI(type);
+            });
         },
 
         // 언어 선택 기능
@@ -658,6 +664,23 @@ createApp({
                 case 'sql-injection':
                     sqlInjectionModule.initializeEventHandlers();
                     break;
+            }
+        },
+
+        // 취약점 UI 직접 렌더링 (v-html 대신 사용)
+        renderVulnerabilityUI(type) {
+            if (type === 'sql-injection') {
+                const container = document.getElementById('sql-injection-container');
+                if (container) {
+                    const html = this.renderVulnerabilityInterface(type);
+                    container.innerHTML = html;
+                    console.log('✅ SQL Injection UI rendered successfully');
+
+                    // 이벤트 핸들러 재초기화
+                    setTimeout(() => {
+                        sqlInjectionModule.initializeEventHandlers();
+                    }, 100);
+                }
             }
         },
 
