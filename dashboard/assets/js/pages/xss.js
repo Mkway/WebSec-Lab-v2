@@ -135,12 +135,12 @@ export const XSSPage = {
                                     <div class="col-md-6">
                                         <h6 class="text-danger"><i class="fas fa-bug"></i> 취약한 페이지</h6>
                                         <iframe id="vulnerable-demo" class="w-100 border rounded"
-                                                style="height: 300px;" sandbox="allow-scripts"></iframe>
+                                                style="height: 300px;" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
                                     </div>
                                     <div class="col-md-6">
                                         <h6 class="text-success"><i class="fas fa-shield-alt"></i> 보안 페이지</h6>
                                         <iframe id="safe-demo" class="w-100 border rounded"
-                                                style="height: 300px;" sandbox="allow-scripts"></iframe>
+                                                style="height: 300px;" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
                                     </div>
                                 </div>
                             </div>
@@ -445,20 +445,44 @@ window.location.href = 'https://malicious-site.com';
     async testVulnerableEndpoint() {
         this.showLoading(true);
         try {
+            const payloadInput = document.getElementById('xss-payload');
+            if (payloadInput) {
+                this.xssPayload = payloadInput.value;
+            }
+
             const serverUrl = this.getCurrentServerUrl();
-            const response = await fetch(`${serverUrl}/xss/vulnerable`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    payload: this.xssPayload,
-                    scenario: this.xssScenario
-                })
-            });
+            const url = `${serverUrl}/xss/vulnerable?input=${encodeURIComponent(this.xssPayload)}`;
+
+            // First get the HTML response
+            const response = await fetch(url);
 
             if (response.ok) {
-                const result = await response.json();
+                const htmlResult = await response.text();
+
+                // Create a result object that matches expected format
+                const result = {
+                    success: true,
+                    data: {
+                        result: htmlResult,
+                        xss_detected: this.detectXSSInResponse(htmlResult),
+                        payload_used: this.xssPayload,
+                        execution_time: '< 0.1s',
+                        attack_success: this.detectXSSInResponse(htmlResult)
+                    },
+                    metadata: {
+                        language: this.currentLanguage.toLowerCase(),
+                        vulnerability_type: 'xss',
+                        mode: 'vulnerable'
+                    }
+                };
+
                 this.displaySingleResult('vulnerable', result);
                 this.updateLiveDemo();
+
+                // Show success message with XSS detection
+                if (result.data.xss_detected) {
+                    VulnerabilityUtils.showAlert('warning', '⚠️ XSS 취약점 감지됨! 스크립트가 필터링 없이 출력됨');
+                }
             } else {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -472,20 +496,46 @@ window.location.href = 'https://malicious-site.com';
     async testSafeEndpoint() {
         this.showLoading(true);
         try {
+            const payloadInput = document.getElementById('xss-payload');
+            if (payloadInput) {
+                this.xssPayload = payloadInput.value;
+            }
+
             const serverUrl = this.getCurrentServerUrl();
-            const response = await fetch(`${serverUrl}/xss/safe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    payload: this.xssPayload,
-                    scenario: this.xssScenario
-                })
-            });
+            const url = `${serverUrl}/xss/safe?input=${encodeURIComponent(this.xssPayload)}`;
+
+            // Get the HTML response
+            const response = await fetch(url);
 
             if (response.ok) {
-                const result = await response.json();
+                const htmlResult = await response.text();
+
+                // Create a result object that matches expected format
+                const result = {
+                    success: true,
+                    data: {
+                        result: htmlResult,
+                        xss_detected: this.detectXSSInResponse(htmlResult),
+                        payload_used: this.xssPayload,
+                        execution_time: '< 0.1s',
+                        attack_success: false  // Safe endpoint should not allow XSS
+                    },
+                    metadata: {
+                        language: this.currentLanguage.toLowerCase(),
+                        vulnerability_type: 'xss',
+                        mode: 'safe'
+                    }
+                };
+
                 this.displaySingleResult('safe', result);
                 this.updateLiveDemo();
+
+                // Show success message
+                if (!result.data.xss_detected) {
+                    VulnerabilityUtils.showAlert('success', '✅ XSS가 성공적으로 차단됨! 입력이 안전하게 이스케이프됨');
+                } else {
+                    VulnerabilityUtils.showAlert('warning', '⚠️ 보안 코드에서 XSS가 감지됨');
+                }
             } else {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -499,8 +549,41 @@ window.location.href = 'https://malicious-site.com';
     async runComparisonTest() {
         this.showLoading(true);
         try {
+            const payloadInput = document.getElementById('xss-payload');
+            if (payloadInput) {
+                this.xssPayload = payloadInput.value;
+            }
+
             const serverUrl = this.getCurrentServerUrl();
-            const results = await xssModule.executeComparisonTest(serverUrl, this.xssPayload, this.xssScenario);
+
+            // Test both endpoints
+            const vulnerableResponse = await fetch(`${serverUrl}/xss/vulnerable?input=${encodeURIComponent(this.xssPayload)}`);
+            const safeResponse = await fetch(`${serverUrl}/xss/safe?input=${encodeURIComponent(this.xssPayload)}`);
+
+            const vulnerableHtml = await vulnerableResponse.text();
+            const safeHtml = await safeResponse.text();
+
+            const results = {
+                vulnerable: {
+                    success: vulnerableResponse.ok,
+                    data: {
+                        result: vulnerableHtml,
+                        xss_detected: this.detectXSSInResponse(vulnerableHtml),
+                        payload_used: this.xssPayload,
+                        execution_time: '< 0.1s'
+                    }
+                },
+                safe: {
+                    success: safeResponse.ok,
+                    data: {
+                        result: safeHtml,
+                        xss_detected: this.detectXSSInResponse(safeHtml),
+                        payload_used: this.xssPayload,
+                        execution_time: '< 0.1s'
+                    }
+                }
+            };
+
             this.displayComparisonResults(results);
             this.updateLiveDemo();
             VulnerabilityUtils.showSuccessAlert('비교 테스트 완료!');
@@ -615,16 +698,34 @@ window.location.href = 'https://malicious-site.com';
 
         container.style.display = 'block';
 
-        // Update demo iframes
+        // Update demo iframes with direct server URLs
         const vulnerableIframe = document.getElementById('vulnerable-demo');
         const safeIframe = document.getElementById('safe-demo');
 
         if (vulnerableIframe && safeIframe) {
             const serverUrl = this.getCurrentServerUrl();
 
-            vulnerableIframe.src = `${serverUrl}/xss/demo/vulnerable?payload=${encodeURIComponent(this.xssPayload)}&scenario=${this.xssScenario}`;
-            safeIframe.src = `${serverUrl}/xss/demo/safe?payload=${encodeURIComponent(this.xssPayload)}&scenario=${this.xssScenario}`;
+            // Use actual server endpoints for live demo
+            vulnerableIframe.src = `${serverUrl}/xss/vulnerable?input=${encodeURIComponent(this.xssPayload)}`;
+            safeIframe.src = `${serverUrl}/xss/safe?input=${encodeURIComponent(this.xssPayload)}`;
         }
+    },
+
+    detectXSSInResponse(htmlResponse) {
+        // Check if the response contains unescaped script tags or JavaScript
+        const xssPatterns = [
+            /<script.*?>.*?<\/script>/gi,
+            /<script.*?>/gi,
+            /javascript:/gi,
+            /on\w+\s*=\s*["'][^"']*["']/gi,
+            /<img[^>]+onerror/gi,
+            /<svg[^>]+onload/gi
+        ];
+
+        // Also check if our original payload is present unescaped
+        const unescapedPayload = this.xssPayload && htmlResponse.includes(this.xssPayload);
+
+        return xssPatterns.some(pattern => pattern.test(htmlResponse)) || unescapedPayload;
     },
 
     setupMessageListener() {
