@@ -1831,3 +1831,249 @@ code[class*="language-"] {
         min-width: 100%;
     }
 }
+
+/* ==== IDE-Style Code Container ==== */
+.code-container {
+    background: #1e1e1e;
+    border-radius: 12px;
+    margin: 15px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    border: 1px solid #404040;
+}
+
+.code-header {
+    background: linear-gradient(135deg, #2d2d30, #1e1e1e);
+    padding: 12px 20px;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    gap: 15px;
+}
+
+.code-filename {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #cccccc;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    flex-grow: 1;
+}
+
+.code-filename i {
+    color: #569cd6;
+}
+
+.vulnerability-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    animation: pulse 2s infinite;
+}
+
+.security-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* VS Code Dark Plus Theme Override */
+.code-container pre[class*="language-"] {
+    margin: 0;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 20px;
+    border-radius: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.code-container code[class*="language-"] {
+    color: #d4d4d4;
+    background: none;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+    font-size: 14px;
+}
+
+/* Enhanced Line Numbers for IDE feel */
+.code-container .line-numbers .line-numbers-rows {
+    background: #252526;
+    border-right: 1px solid #404040;
+    padding-right: 12px;
+    margin-right: 15px;
+    min-width: 40px;
+}
+
+.code-container .line-numbers .line-numbers-rows > span:before {
+    color: #858585;
+    font-size: 12px;
+    text-align: right;
+    display: block;
+    padding-right: 8px;
+}
+
+/* Syntax highlighting for dark theme */
+.code-container .token.comment {
+    color: #6a9955;
+    font-style: italic;
+}
+
+.code-container .token.keyword {
+    color: #569cd6;
+    font-weight: bold;
+}
+
+.code-container .token.string {
+    color: #ce9178;
+}
+
+.code-container .token.number {
+    color: #b5cea8;
+}
+
+.code-container .token.function {
+    color: #dcdcaa;
+}
+
+.code-container .token.variable {
+    color: #9cdcfe;
+}
+
+.code-container .token.operator {
+    color: #d4d4d4;
+}
+
+.code-container .token.punctuation {
+    color: #cccccc;
+}
+
+.code-container .token.tag {
+    color: #569cd6;
+}
+
+.code-container .token.attr-name {
+    color: #92c5f8;
+}
+
+.code-container .token.attr-value {
+    color: #ce9178;
+}
+
+.code-container .token.class-name {
+    color: #4ec9b0;
+}
+
+/* PHP specific highlighting */
+.code-container .token.php.tag {
+    color: #569cd6;
+    font-weight: bold;
+}
+
+.code-container .token.delimiter.important {
+    color: #569cd6;
+    font-weight: bold;
+}
+
+/* Scrollbar styling for code container */
+.code-container pre::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.code-container pre::-webkit-scrollbar-track {
+    background: #2d2d30;
+}
+
+.code-container pre::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 4px;
+}
+
+.code-container pre::-webkit-scrollbar-thumb:hover {
+    background: #4f4f4f;
+}
+
+/* Copy button styling for dark theme */
+.code-container .toolbar {
+    background: rgba(45, 45, 48, 0.95);
+    border-bottom: 1px solid #404040;
+}
+
+.code-container .toolbar-item button {
+    background: #404040;
+    border: 1px solid #555555;
+    color: #cccccc;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.code-container .toolbar-item button:hover {
+    background: #505050;
+    border-color: #666666;
+}
+
+/* Animated typing effect for code demonstration */
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    50% { border-color: transparent; }
+}
+
+.code-demo .line {
+    overflow: hidden;
+    border-right: 2px solid #569cd6;
+    white-space: nowrap;
+    margin: 0 auto;
+    animation: typing 2s steps(40, end), blink 0.75s step-end infinite;
+}
+
+/* Hover effects for code containers */
+.code-container:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* File type icons */
+.code-filename i.fa-file-code:before {
+    content: "";
+}
+
+.code-filename[data-lang="php"] i:before {
+    content: "";
+    color: #777bb4;
+}
+
+.code-filename[data-lang="js"] i:before {
+    content: "";
+    color: #f7df1e;
+}
+
+.code-filename[data-lang="py"] i:before {
+    content: "";
+    color: #3776ab;
+}
+
+.code-filename[data-lang="java"] i:before {
+    content: "☕";
+    color: #ed8b00;
+}
+
+.code-filename[data-lang="go"] i:before {
+    content: "";
+    color: #00add8;
+}

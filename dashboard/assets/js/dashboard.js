@@ -1,5 +1,11 @@
 const { createApp } = Vue;
 
+// Import modular components
+import { languageServers, vulnerabilityCategories } from './config/servers.js?v=5';
+import { VulnerabilityUtils } from './vulnerabilities/common.js?v=5';
+import { xssModule } from './vulnerabilities/xss.js?v=5';
+import { sqlInjectionModule } from './vulnerabilities/sql-injection.js?v=5';
+
 createApp({
     data() {
         return {
@@ -9,211 +15,10 @@ createApp({
             selectedLanguage: 'PHP',
             isLoading: false,
 
-            // 언어별 서버 정보
-            languageServers: {
-                'PHP': {
-                    name: 'PHP',
-                    port: 8080,
-                    status: 'unknown',
-                    icon: '🐘',
-                    color: '#4F5B93',
-                    vulnerableCode: `<?php
-// 취약한 코드 - XSS 공격에 노출
-echo $_GET['input']; // 사용자 입력을 필터링 없이 그대로 출력
-
-// ⚠️ 문제점:
-// 1. 입력 검증 없음
-// 2. HTML 이스케이프 없음
-// 3. 악성 스크립트 실행 가능`,
-                    safeCode: `<?php
-// 안전한 코드 - XSS 공격 방어
-echo htmlspecialchars($_GET['input'], ENT_QUOTES, 'UTF-8');
-
-// ✅ 보안 조치:
-// 1. htmlspecialchars()로 HTML 이스케이프
-// 2. ENT_QUOTES로 따옴표도 변환
-// 3. UTF-8 인코딩 명시`
-                },
-                'Node.js': {
-                    name: 'Node.js',
-                    port: 3000,
-                    status: 'unknown',
-                    icon: '💚',
-                    color: '#68A063',
-                    vulnerableCode: `// 취약한 코드 - XSS 공격에 노출
-app.get('/xss/vulnerable', (req, res) => {
-    const input = req.query.input || '';
-    // 사용자 입력을 필터링 없이 그대로 출력
-    res.send(\`<h1>User Input: \${input}</h1>\`);
-});
-
-// ⚠️ 문제점:
-// 1. 입력 검증 없음
-// 2. HTML 이스케이프 없음
-// 3. 악성 스크립트 실행 가능`,
-                    safeCode: `// 안전한 코드 - XSS 공격 방어
-app.get('/xss/safe', (req, res) => {
-    const input = req.query.input || '';
-    // HTML 이스케이프 처리
-    const escapeHtml = (text) => text.replace(/[&<>"']/g,
-        (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;',
-                  '"': '&quot;', "'": '&#39;' }[m]));
-    res.send(\`<h1>User Input: \${escapeHtml(input)}</h1>\`);
-});
-
-// ✅ 보안 조치:
-// 1. HTML 특수문자 이스케이프
-// 2. 악성 스크립트 무력화`
-                },
-                'Python': {
-                    name: 'Python',
-                    port: 5000,
-                    status: 'unknown',
-                    icon: '🐍',
-                    color: '#3776AB',
-                    vulnerableCode: `# 취약한 코드 - XSS 공격에 노출
-@app.route('/xss/vulnerable')
-def xss_vulnerable():
-    user_input = request.args.get('input', '')
-    # 사용자 입력을 필터링 없이 그대로 출력
-    return f'<h1>User Input: {user_input}</h1>'
-
-# ⚠️ 문제점:
-# 1. 입력 검증 없음
-# 2. HTML 이스케이프 없음
-# 3. 악성 스크립트 실행 가능`,
-                    safeCode: `# 안전한 코드 - XSS 공격 방어
-import html
-
-@app.route('/xss/safe')
-def xss_safe():
-    user_input = request.args.get('input', '')
-    # HTML 이스케이프 처리
-    safe_input = html.escape(user_input)
-    return f'<h1>User Input: {safe_input}</h1>'
-
-# ✅ 보안 조치:
-# 1. html.escape()로 HTML 이스케이프
-# 2. 악성 스크립트 무력화`
-                },
-                'Java': {
-                    name: 'Java',
-                    port: 8081,
-                    status: 'unknown',
-                    icon: '☕',
-                    color: '#ED8B00',
-                    vulnerableCode: `// 취약한 코드 - XSS 공격에 노출
-@GetMapping("/xss/vulnerable")
-public String xssVulnerable(@RequestParam String input) {
-    // 사용자 입력을 필터링 없이 그대로 출력
-    return "<h1>User Input: " + input + "</h1>";
-}
-
-// ⚠️ 문제점:
-// 1. 입력 검증 없음
-// 2. HTML 이스케이프 없음
-// 3. 악성 스크립트 실행 가능`,
-                    safeCode: `// 안전한 코드 - XSS 공격 방어
-import org.springframework.web.util.HtmlUtils;
-
-@GetMapping("/xss/safe")
-public String xssSafe(@RequestParam String input) {
-    // HTML 이스케이프 처리
-    String safeInput = HtmlUtils.htmlEscape(input);
-    return "<h1>User Input: " + safeInput + "</h1>";
-}
-
-// ✅ 보안 조치:
-// 1. HtmlUtils.htmlEscape()로 HTML 이스케이프
-// 2. 악성 스크립트 무력화`
-                },
-                'Go': {
-                    name: 'Go',
-                    port: 8082,
-                    status: 'unknown',
-                    icon: '🐹',
-                    color: '#00ADD8',
-                    vulnerableCode: `// 취약한 코드 - XSS 공격에 노출
-r.GET("/xss/vulnerable", func(c *gin.Context) {
-    input := c.DefaultQuery("input", "")
-    // 사용자 입력을 필터링 없이 그대로 출력
-    c.Header("Content-Type", "text/html")
-    c.String(200, "<h1>User Input: %s</h1>", input)
-})
-
-// ⚠️ 문제점:
-// 1. 입력 검증 없음
-// 2. HTML 이스케이프 없음
-// 3. 악성 스크립트 실행 가능`,
-                    safeCode: `// 안전한 코드 - XSS 공격 방어
-import "html"
-
-r.GET("/xss/safe", func(c *gin.Context) {
-    input := c.DefaultQuery("input", "")
-    // HTML 이스케이프 처리
-    safeInput := html.EscapeString(input)
-    c.Header("Content-Type", "text/html")
-    c.String(200, "<h1>User Input: %s</h1>", safeInput)
-})
-
-// ✅ 보안 조치:
-// 1. html.EscapeString()로 HTML 이스케이프
-// 2. 악성 스크립트 무력화`
-                }
-            },
-            // 카테고리별 그룹화된 취약점 목록 (VULNERABILITY_PRIORITY.md 기반)
-            vulnerabilityCategories: [
-                {
-                    id: 'injection-attacks',
-                    name: '💉 Injection Attacks',
-                    priority: 'high',
-                    icon: 'fas fa-syringe',
-                    description: '코드/쿼리 주입 공격',
-                    vulnerabilities: [
-                        { type: 'sql-injection', name: 'SQL Injection', icon: 'fas fa-database', status: 'completed', progress: 20, languages: ['PHP'] },
-                        { type: 'xss', name: 'XSS', icon: 'fas fa-code', status: 'completed', progress: 100, languages: ['PHP', 'Node.js', 'Python', 'Java', 'Go'] },
-                        { type: 'command-injection', name: 'Command Injection', icon: 'fas fa-terminal', status: 'planned', progress: 0, languages: [] },
-                        { type: 'nosql-injection', name: 'NoSQL Injection', icon: 'fas fa-leaf', status: 'planned', progress: 0, languages: [] }
-                    ]
-                },
-                {
-                    id: 'file-system-attacks',
-                    name: '📁 File System Attacks',
-                    priority: 'high',
-                    icon: 'fas fa-folder-open',
-                    description: '파일 시스템 공격',
-                    vulnerabilities: [
-                        { type: 'file-upload', name: 'File Upload', icon: 'fas fa-upload', status: 'planned', progress: 0, languages: [] },
-                        { type: 'directory-traversal', name: 'Path Traversal', icon: 'fas fa-route', status: 'planned', progress: 0, languages: [] },
-                        { type: 'file-inclusion', name: 'File Inclusion', icon: 'fas fa-file-import', status: 'planned', progress: 0, languages: [] }
-                    ]
-                },
-                {
-                    id: 'web-security-bypass',
-                    name: '🌐 Web Security Bypass',
-                    priority: 'medium',
-                    icon: 'fas fa-shield-alt',
-                    description: '웹 보안 메커니즘 우회',
-                    vulnerabilities: [
-                        { type: 'csrf', name: 'CSRF', icon: 'fas fa-exchange-alt', status: 'planned', progress: 0, languages: [] },
-                        { type: 'ssti', name: 'SSTI', icon: 'fas fa-code-branch', status: 'planned', progress: 0, languages: [] },
-                        { type: 'xxe', name: 'XXE', icon: 'fas fa-file-code', status: 'planned', progress: 0, languages: [] },
-                        { type: 'ssrf', name: 'SSRF', icon: 'fas fa-network-wired', status: 'planned', progress: 0, languages: [] }
-                    ]
-                },
-                {
-                    id: 'advanced-attacks',
-                    name: '🔓 Advanced Attacks',
-                    priority: 'low',
-                    icon: 'fas fa-lock-open',
-                    description: '고급 공격 기법',
-                    vulnerabilities: [
-                        { type: 'deserialization', name: 'Insecure Deserialization', icon: 'fas fa-unlink', status: 'planned', progress: 0, languages: [] },
-                        { type: 'ldap-injection', name: 'LDAP Injection', icon: 'fas fa-building', status: 'planned', progress: 0, languages: [] },
-                        { type: 'xpath-injection', name: 'XPath Injection', icon: 'fas fa-sitemap', status: 'planned', progress: 0, languages: [] }
-                    ]
-                }
-            ],
+            // 언어별 서버 정보 (모듈에서 가져옴)
+            languageServers: languageServers,
+            // 카테고리별 그룹화된 취약점 목록 (모듈에서 가져옴)
+            vulnerabilityCategories: vulnerabilityCategories,
 
             // 현재 활성화된 카테고리
             activeCategory: 'injection-attacks',
@@ -280,6 +85,11 @@ r.GET("/xss/safe", func(c *gin.Context) {
         this.loadServerInfo();
         this.setupMessageListener();
         this.initializePrism();
+
+        // 초기 코드 하이라이팅 실행
+        setTimeout(() => {
+            this.updateCodeHighlighting();
+        }, 500);
     },
     methods: {
         initializeVulnerabilities() {
@@ -299,18 +109,21 @@ r.GET("/xss/safe", func(c *gin.Context) {
             this.selectedLanguage = language;
             this.xssResult = null;
             console.log(`✅ Selected language: ${language}`);
+
+            // 언어 변경 후 코드 하이라이팅 재실행
+            setTimeout(() => {
+                this.updateCodeHighlighting();
+            }, 100);
         },
 
-        // 언어별 Prism.js 클래스 매핑
+        // 언어별 Prism.js 클래스 매핑 (공통 모듈 사용)
         getLanguageClass(language) {
-            const languageMap = {
-                'PHP': 'php',
-                'Node.js': 'javascript',
-                'Python': 'python',
-                'Java': 'java',
-                'Go': 'go'
-            };
-            return languageMap[language] || 'javascript';
+            return VulnerabilityUtils.getLanguageClass(language);
+        },
+
+        // XSS 코드 예시 가져오기
+        getXSSCodeExamples(language) {
+            return xssModule.getCodeExamples(language);
         },
 
         // 개별 취약한 엔드포인트 테스트
@@ -380,41 +193,7 @@ r.GET("/xss/safe", func(c *gin.Context) {
         // 모든 언어 서버 상태 확인
         async checkAllLanguageServers() {
             for (const [language, server] of Object.entries(this.languageServers)) {
-                await this.checkLanguageServerStatus(language);
-            }
-        },
-
-        // 개별 언어 서버 상태 확인
-        async checkLanguageServerStatus(language) {
-            const server = this.languageServers[language];
-
-            try {
-                // 실제 서버에 헬스체크 요청
-                const serverUrl = `http://localhost:${server.port}`;
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-                const response = await fetch(`${serverUrl}/`, {
-                    mode: 'cors',
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    server.status = 'running';
-                    console.log(`✅ Server ${language}: running`);
-                } else {
-                    server.status = 'offline';
-                    console.log(`❌ Server ${language}: offline (HTTP ${response.status})`);
-                }
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    console.log(`⏰ Server ${language}: timeout`);
-                } else {
-                    console.log(`❌ Server ${language} health check failed:`, error.message);
-                }
-                server.status = 'offline';
+                await VulnerabilityUtils.checkServerStatus(language, server);
             }
         },
 
@@ -637,7 +416,7 @@ r.GET("/xss/safe", func(c *gin.Context) {
         },
 
         delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+            return VulnerabilityUtils.delay(ms);
         },
 
         // Phase 2: Code Highlighting and Display Enhancement
@@ -660,59 +439,40 @@ r.GET("/xss/safe", func(c *gin.Context) {
         },
 
         addCopyButtons() {
-            // 각 코드 섹션에 복사 버튼 추가
-            document.querySelectorAll('.code-section').forEach(section => {
-                if (!section.querySelector('.code-copy-btn')) {
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'code-copy-btn';
-                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> 복사';
-                    copyBtn.addEventListener('click', () => {
-                        const codeElement = section.querySelector('code');
-                        if (codeElement) {
-                            this.copyCodeToClipboard(codeElement.textContent);
-                        }
-                    });
-                    section.appendChild(copyBtn);
-                }
-            });
+            VulnerabilityUtils.addCopyButtons();
         },
 
         copyCodeToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                this.showSuccessAlert('📋 코드가 클립보드에 복사되었습니다!');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                this.showSuccessAlert('📋 코드가 클립보드에 복사되었습니다!');
-            });
+            VulnerabilityUtils.copyCodeToClipboard(text);
         },
 
         updateCodeHighlighting() {
-            // 동적으로 추가된 코드 블록의 하이라이트 업데이트
+            // Vue의 반응성을 위해 nextTick 사용
             this.$nextTick(() => {
+                console.log('🎨 Updating code highlighting...');
+                console.log('Prism available:', !!window.Prism);
+                console.log('Code blocks found:', document.querySelectorAll('pre code').length);
+
                 if (window.Prism) {
-                    Prism.highlightAll();
-                    this.addCopyButtons();
+                    // 모든 언어 컴포넌트가 로드되었는지 확인
+                    console.log('Available Prism languages:', Object.keys(Prism.languages));
+
+                    // 강제로 모든 코드 블록 다시 하이라이트
+                    document.querySelectorAll('pre code').forEach(block => {
+                        Prism.highlightElement(block);
+                    });
+
+                    // 복사 버튼 추가
+                    VulnerabilityUtils.addCopyButtons();
+
+                    console.log('✅ Code highlighting completed');
+                } else {
+                    console.error('❌ Prism.js not available');
                 }
             });
         },
         getRiskClass(level) {
-            switch (level?.toLowerCase()) {
-                case 'high':
-                case 'critical':
-                    return 'badge bg-danger';
-                case 'medium':
-                    return 'badge bg-warning';
-                case 'low':
-                    return 'badge bg-info';
-                default:
-                    return 'badge bg-secondary';
-            }
+            return VulnerabilityUtils.getRiskClass(level);
         },
         setupMessageListener() {
             // iframe에서 오는 메시지 수신
@@ -873,95 +633,38 @@ r.GET("/xss/safe", func(c *gin.Context) {
             }, 7000);
         },
         showSuccessAlert(message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
-            alertDiv.style.cssText = 'top: 80px; right: 20px; z-index: 10000; min-width: 350px; max-width: 500px; box-shadow: 0 8px 32px rgba(40, 167, 69, 0.3);';
-            alertDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="fas fa-check-circle fa-2x text-success"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-success mb-1">
-                            <i class="fas fa-sparkles"></i> 작업 성공!
-                        </div>
-                        <div class="small text-success-emphasis">
-                            ${message}
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-success" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            document.body.appendChild(alertDiv);
-
-            // 진입 애니메이션
-            alertDiv.style.transform = 'translateX(100%)';
-            alertDiv.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-
-            setTimeout(() => {
-                alertDiv.style.transform = 'translateX(0)';
-            }, 10);
-
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        if (alertDiv.parentNode) {
-                            alertDiv.parentNode.removeChild(alertDiv);
-                        }
-                    }, 500);
-                }
-            }, 4000);
+            VulnerabilityUtils.showSuccessAlert(message);
         },
         showErrorAlert(message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-            alertDiv.style.cssText = 'top: 80px; right: 20px; z-index: 10000; min-width: 350px; max-width: 500px; box-shadow: 0 8px 32px rgba(220, 53, 69, 0.3);';
-            alertDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-danger mb-1">
-                            <i class="fas fa-bug"></i> 오류 발생!
-                        </div>
-                        <div class="small text-danger-emphasis">
-                            ${message}
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-danger" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            document.body.appendChild(alertDiv);
-
-            // 진입 애니메이션 (에러는 약간 흔들림 효과 추가)
-            alertDiv.style.transform = 'translateX(100%)';
-            alertDiv.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-
-            setTimeout(() => {
-                alertDiv.style.transform = 'translateX(0)';
-                // 에러 알림에는 약간의 흔들림 추가
-                setTimeout(() => {
-                    alertDiv.style.animation = 'dangerShake 0.5s ease-in-out';
-                }, 200);
-            }, 10);
-
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        if (alertDiv.parentNode) {
-                            alertDiv.parentNode.removeChild(alertDiv);
-                        }
-                    }, 500);
-                }
-            }, 6000);
+            VulnerabilityUtils.showErrorAlert(message);
         },
+        // Vulnerability-specific methods
+        renderVulnerabilityInterface(type) {
+            switch(type) {
+                case 'xss':
+                    return xssModule.renderInterface();
+                case 'sql-injection':
+                    return sqlInjectionModule.renderInterface();
+                default:
+                    return '<div class="alert alert-info">해당 취약점은 아직 구현되지 않았습니다.</div>';
+            }
+        },
+
+        initializeVulnerabilityModule(type) {
+            switch(type) {
+                case 'xss':
+                    xssModule.initializeEventHandlers();
+                    break;
+                case 'sql-injection':
+                    sqlInjectionModule.initializeEventHandlers();
+                    break;
+            }
+        },
+
         // Utility methods for future vulnerability types
         async executeSQLTest() {
-            // TODO: Implement SQL injection testing
-            console.log('SQL injection test not implemented yet');
+            // Delegate to SQL injection module
+            return await sqlInjectionModule.executeSQLTest();
         },
         async executeCommandTest() {
             // TODO: Implement command injection testing
