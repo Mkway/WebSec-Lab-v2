@@ -536,9 +536,22 @@ export const SQLInjectionPage = {
     updateCodeHighlighting() {
         setTimeout(() => {
             if (window.Prism) {
-                Prism.highlightAll();
-                VulnerabilityUtils.addCopyButtons();
+                try {
+                    // Check if required components are loaded
+                    if (window.Prism.languages &&
+                        (window.Prism.languages.php || window.Prism.languages.sql)) {
+                        Prism.highlightAll();
+                        VulnerabilityUtils.addCopyButtons();
+                        console.log('✅ SQL Injection page syntax highlighting applied');
+                    } else {
+                        console.warn('⚠️ Prism language components not fully loaded');
+                    }
+                } catch (error) {
+                    console.warn('⚠️ SQL Injection page syntax highlighting failed:', error.message);
+                }
+            } else {
+                console.warn('⚠️ Prism.js not available for SQL Injection page');
             }
-        }, 100);
+        }, 200);
     }
 };

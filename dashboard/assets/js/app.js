@@ -1,9 +1,9 @@
 // Main Application Entry Point
-import { router } from './router.js?v=2';
-import { NavigationComponent } from './components/navigation.js?v=2';
-import { DashboardPage } from './pages/dashboard.js?v=2';
-import { SQLInjectionPage } from './pages/sql-injection.js?v=2';
-import { XSSPage } from './pages/xss.js?v=2';
+import { router } from './router.js?v=3';
+import { NavigationComponent } from './components/navigation.js?v=3';
+import { DashboardPage } from './pages/dashboard.js?v=3';
+import { SQLInjectionPage } from './pages/sql-injection.js?v=3';
+import { XSSPage } from './pages/xss.js?v=3';
 
 // Application Class
 class WebSecLabApp {
@@ -18,14 +18,14 @@ class WebSecLabApp {
         console.log('🚀 Initializing WebSec-Lab v2 Dashboard...');
 
         try {
-            // Initialize navigation
-            await this.initializeNavigation();
-
-            // Register routes
+            // Register routes first
             this.registerRoutes();
 
             // Initialize router
             router.init();
+
+            // Initialize navigation after router is ready
+            await this.initializeNavigation();
 
             // Load theme
             NavigationComponent.loadTheme();

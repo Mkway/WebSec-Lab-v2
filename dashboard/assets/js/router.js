@@ -53,10 +53,14 @@ export class Router {
     // Handle route changes
     async handleRouteChange() {
         const path = this.getCurrentPath();
+        console.log(`🔍 Handling route change: ${path}`);
+        console.log(`📝 Available routes:`, Array.from(this.routes.keys()));
+
         const route = this.routes.get(path) || this.routes.get(this.defaultRoute);
 
         if (!route) {
-            console.error(`Route not found: ${path}`);
+            console.error(`❌ Route not found: ${path}`);
+            console.log(`🔄 Navigating to default route: ${this.defaultRoute}`);
             this.navigate(this.defaultRoute);
             return;
         }
@@ -176,9 +180,26 @@ export class Router {
 
     // Trigger post-render hooks
     triggerPostRender(path) {
-        // Re-initialize syntax highlighting
+        // Re-initialize syntax highlighting with error handling
         if (window.Prism) {
-            Prism.highlightAll();
+            try {
+                console.log('🎨 Applying syntax highlighting...');
+
+                // Wait for all Prism components to load
+                setTimeout(() => {
+                    try {
+                        Prism.highlightAll();
+                        console.log('✅ Syntax highlighting applied successfully');
+                    } catch (error) {
+                        console.warn('⚠️ Prism highlighting failed:', error.message);
+                    }
+                }, 100);
+
+            } catch (error) {
+                console.warn('⚠️ Prism not fully loaded:', error.message);
+            }
+        } else {
+            console.warn('⚠️ Prism.js not available');
         }
 
         // Trigger custom event

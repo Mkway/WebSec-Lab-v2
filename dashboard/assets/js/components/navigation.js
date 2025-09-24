@@ -110,7 +110,7 @@ export const NavigationComponent = {
                 if (vuln.status === 'completed') {
                     html += `
                         <li>
-                            <a class="dropdown-item" href="#" onclick="router.navigate('vulnerability/${vuln.type}')"
+                            <a class="dropdown-item" href="#" onclick="console.log('Navigating to: vulnerability/${vuln.type}'); router.navigate('vulnerability/${vuln.type}'); return false;"
                                data-route="vulnerability/${vuln.type}">
                                 <i class="${vuln.icon} me-2"></i>${vuln.name}
                                 <span class="badge bg-success ms-2">활성</span>

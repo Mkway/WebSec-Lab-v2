@@ -723,9 +723,22 @@ window.location.href = 'https://malicious-site.com';
     updateCodeHighlighting() {
         setTimeout(() => {
             if (window.Prism) {
-                Prism.highlightAll();
-                VulnerabilityUtils.addCopyButtons();
+                try {
+                    // Check if required components are loaded
+                    if (window.Prism.languages &&
+                        (window.Prism.languages.php || window.Prism.languages.javascript)) {
+                        Prism.highlightAll();
+                        VulnerabilityUtils.addCopyButtons();
+                        console.log('✅ XSS page syntax highlighting applied');
+                    } else {
+                        console.warn('⚠️ Prism language components not fully loaded');
+                    }
+                } catch (error) {
+                    console.warn('⚠️ XSS page syntax highlighting failed:', error.message);
+                }
+            } else {
+                console.warn('⚠️ Prism.js not available for XSS page');
             }
-        }, 100);
+        }, 200);
     }
 };

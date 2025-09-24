@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routing Test</title>
+</head>
+<body>
+    <h1>Router Test</h1>
+
+    <button onclick="testXSSRoute()">Test XSS Route</button>
+    <button onclick="testSQLRoute()">Test SQL Route</button>
+
+    <div id="current-route">Current route: <span id="route-display"></span></div>
+    <div id="debug-info"></div>
+
+    <script type="module">
+        import { router } from '../assets/js/router.js?v=3';
+
+        window.testRouter = router;
+
+        function updateRouteDisplay() {
+            document.getElementById('route-display').textContent = window.location.hash || 'none';
+            document.getElementById('debug-info').innerHTML = `
+                <pre>Current path: ${router.getCurrentPath()}
+Routes registered: ${Array.from(router.routes.keys()).join(', ')}</pre>
+            `;
+        }
+
+        window.testXSSRoute = function() {
+            console.log('Testing XSS route...');
+            router.navigate('vulnerability/xss');
+        };
+
+        window.testSQLRoute = function() {
+            console.log('Testing SQL route...');
+            router.navigate('vulnerability/sql-injection');
+        };
+
+        // Update display every second
+        setInterval(updateRouteDisplay, 1000);
+        updateRouteDisplay();
+    </script>
+</body>
+</html>
