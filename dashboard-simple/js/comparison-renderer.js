@@ -158,12 +158,23 @@ if ($stmt->rowCount() > 0) {
         console.log('🔍 [DEBUG] Vulnerable Result:', vulnerableResult);
         console.log('🔍 [DEBUG] Safe Result:', safeResult);
 
-        // 공격 성공 여부 분석 (Python 서버 응답 형식에 맞게 수정)
-        const vulnerableXSS = vulnerableResult.data?.data?.attack_success || vulnerableResult.data?.data?.vulnerability_detected;
-        const safeXSS = safeResult.data?.data?.attack_success || safeResult.data?.data?.vulnerability_detected;
+        // 공격 성공 여부 분석 (다중 서버 응답 형식 지원)
+        let vulnerableXSS, safeXSS, vulnerableOutput, safeOutput;
 
-        const vulnerableOutput = vulnerableResult.data?.data?.result || '';
-        const safeOutput = safeResult.data?.data?.result || '';
+        if (vulnerableResult.language === 'python') {
+            // Python 서버 응답 형식
+            vulnerableXSS = vulnerableResult.data?.data?.attack_success || vulnerableResult.data?.data?.vulnerability_detected;
+            safeXSS = safeResult.data?.data?.attack_success || safeResult.data?.data?.vulnerability_detected;
+            vulnerableOutput = vulnerableResult.data?.data?.result || '';
+            safeOutput = safeResult.data?.data?.result || '';
+        } else {
+            // PHP 및 기타 서버 응답 형식
+            vulnerableXSS = vulnerableResult.data?.result?.xss_detected || vulnerableResult.data?.success;
+            safeXSS = safeResult.data?.result?.xss_detected || safeResult.data?.success;
+            vulnerableOutput = vulnerableResult.data?.result?.html_output || '';
+            safeOutput = safeResult.data?.result?.html_output || '';
+        }
+
         const payload = vulnerableResult.requestData?.payload || '<script>alert("XSS")</script>';
 
         return `
