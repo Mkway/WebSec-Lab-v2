@@ -256,7 +256,7 @@ echo "&lt;/div&gt;";</code></pre>
                                 </div>
                                 <div class="attack-result ${safeXSS ? 'attack-success' : 'attack-fail'}">
                                     ${safeXSS ?
-                                        '⚠️ 예상치 못한 문제가 발생했습니다.' :
+                                        '⚠️ <strong>서버 오류:</strong> 안전한 코드에서 XSS가 실행되었습니다. 서버 구현을 확인하세요!' :
                                         '✅ <strong>XSS 차단 성공!</strong> HTML 특수문자가 안전하게 이스케이프되었습니다.'
                                     }
                                 </div>
