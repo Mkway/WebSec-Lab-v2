@@ -1,231 +1,66 @@
 # WebSec-Lab v2 🛡️
 
-**차세대 멀티 언어 웹 보안 취약점 테스트 플랫폼**
+**실전 웹 보안 취약점 테스트 플랫폼**
 
-> 🎯 **단일 카드 UI로 직관적 학습** | 🌍 **5개 언어 XSS 지원** | 📊 **시각적 공격 흐름도**
+> 🎯 **간단하고 직관적인 UI** | 🐘 **PHP XSS 완전 구현** | 📊 **실전 페이로드 테스트**
 
 ## 🚀 빠른 시작
 
-### 통합 대시보드로 XSS 테스트 시작 (추천)
+### Docker Compose로 시작 (추천)
 ```bash
-make xss
+docker compose up -d
 ```
-**→ 접속: http://localhost** (통합 대시보드)
-**→ 모든 언어의 XSS 테스트를 한 화면에서 비교**
 
-### 개별 서버 테스트
+### Makefile로 시작
 ```bash
-make php      # PHP 서버: http://localhost:8080
-make nodejs   # Node.js 서버: http://localhost:3000
-make python   # Python 서버: http://localhost:5000
-make java     # Java 서버: http://localhost:8081
-make go       # Go 서버: http://localhost:8082
+make start    # 모든 서버 시작
+make stop     # 모든 서버 중지
+make status   # 서버 상태 확인
 ```
 
-## 🏗️ 시스템 아키텍처
+**접속 주소:**
+- 📊 **대시보드**: http://localhost
+- 🐘 **PHP 서버**: http://localhost:8080
 
-```mermaid
-graph TB
-    subgraph "🌐 Frontend Layer"
-        D[통합 대시보드<br/>Vue.js + Bootstrap<br/>:80]
-    end
+## 📋 서버 구현 현황
 
-    subgraph "🔄 Language Servers"
-        P[PHP Server<br/>Apache + PHP<br/>:8080]
-        N[Node.js Server<br/>Express.js<br/>:3000]
-        Y[Python Server<br/>Flask<br/>:5000]
-        J[Java Server<br/>Spring Boot<br/>:8081]
-        G[Go Server<br/>Gin Framework<br/>:8082]
-    end
+| 언어 | 경로 | 상태 | Docker 설정 |
+|------|------|------|------------|
+| 🐘 **PHP** | `servers/php-server/` | ✅ **완료** | ✅ **활성화** |
+| 💚 **Node.js** | `servers/nodejs-server/` | ✅ **완료** | ⏸️ 비활성화 |
+| 🐍 **Python** | `servers/python-server/` | ✅ **완료** | ⏸️ 비활성화 |
+| ☕ **Java** | `servers/java-server/` | ✅ **완료** | ⏸️ 비활성화 |
+| 🐹 **Go** | `servers/go-server/` | ✅ **완료** | ⏸️ 비활성화 |
 
-    subgraph "🗄️ Database Layer"
-        subgraph "SQL Databases"
-            M[(MySQL<br/>:3306)]
-            PG[(PostgreSQL<br/>:5432)]
-            H2[(H2 Database<br/>Embedded)]
-        end
-        subgraph "NoSQL & Cache"
-            MG[(MongoDB<br/>:27017)]
-            R[(Redis<br/>:6379)]
-        end
-    end
+> **참고**: 현재 docker-compose.yml에는 대시보드와 PHP 서버만 설정되어 있습니다. 다른 서버들을 활성화하려면 docker-compose.yml에 추가 설정이 필요합니다.
 
-    subgraph "🐳 Container Network"
-        NET[websec-network<br/>172.20.0.0/16]
-    end
+## 🧪 XSS 테스트
 
-    D -.-> P
-    D -.-> N
-    D -.-> Y
-    D -.-> J
-    D -.-> G
-
-    P --> M
-    N --> MG
-    Y --> PG
-    J --> H2
-    G --> M
-
-    P --> R
-    N --> R
-
-    P -.- NET
-    N -.- NET
-    Y -.- NET
-    J -.- NET
-    G -.- NET
-    D -.- NET
-    M -.- NET
-    PG -.- NET
-    H2 -.- NET
-    MG -.- NET
-    R -.- NET
-
-    style D fill:#e1f5fe
-    style P fill:#fff3e0
-    style N fill:#e8f5e8
-    style Y fill:#fff8e1
-    style J fill:#fce4ec
-    style G fill:#e3f2fd
-    style M fill:#f3e5f5
-    style PG fill:#e8eaf6
-    style H2 fill:#fff8e1
-    style MG fill:#e0f2f1
-    style R fill:#ffebee
-```
-
-## 🎯 XSS 테스트 플랫폼
-
-### ✨ **새로운 단일 카드 UI**
-- **직관적 인터페이스**: 복잡한 Split View → 간단한 단일 카드
-- **시각적 공격 흐름**: 👤 사용자 입력 → 🌐 서버 처리 → 💻 브라우저 결과
-- **실시간 실행**: 취약/안전 코드를 각각 버튼으로 바로 테스트
-- **언어별 비교**: 5개 언어의 XSS 구현을 한 화면에서 비교
-
-### 🌍 **지원 언어 및 상태**
-
-| 언어 | 프레임워크 | 취약한 코드 | 안전한 코드 | 상태 |
-|------|------------|-------------|-------------|------|
-| 🐘 **PHP** | Native | `echo $_GET['input']` | `htmlspecialchars()` | ✅ **완료** |
-| 💚 **Node.js** | Express | 직접 출력 | HTML 이스케이프 | ✅ **완료** |
-| 🐍 **Python** | Flask | `f-string` 직접 출력 | `html.escape()` | ✅ **완료** |
-| ☕ **Java** | Spring Boot | 직접 문자열 연결 | `HtmlUtils.htmlEscape()` | ✅ **완료** |
-| 🐹 **Go** | Gin | `c.String()` 직접 출력 | `html.EscapeString()` | ✅ **완료** |
-
-### 📊 **테스트 기능**
-
-```mermaid
-flowchart LR
-    A[사용자 페이로드 입력] --> B{언어 선택}
-    B --> C[🚀 테스트 시작]
-    C --> D[실시간 진행 상황]
-    D --> E[공격 흐름도 표시]
-    E --> F[코드 비교 분석]
-    F --> G[개별 실행 버튼]
-    G --> H[실시간 결과 표시]
-
-    style A fill:#e3f2fd
-    style C fill:#ffebee
-    style E fill:#e8f5e8
-    style G fill:#fff3e0
-    style H fill:#f3e5f5
-```
-
-## 🧪 XSS 페이로드 라이브러리
-
-### 🚀 **기본 테스트**
+### 기본 XSS 페이로드
 ```html
 <script>alert("XSS")</script>
-```
-
-### 🖼️ **이미지 태그 우회**
-```html
 <img src=x onerror=alert("XSS")>
-```
-
-### 🎨 **SVG 벡터**
-```html
 <svg onload=alert("XSS")>
 ```
 
-### 👆 **이벤트 핸들러**
-```html
-" onmouseover="alert('XSS')" "
+### PHP XSS 예시
+```php
+// 취약한 코드
+echo $_GET['input'];
+
+// 안전한 코드
+echo htmlspecialchars($_GET['input'], ENT_QUOTES, 'UTF-8');
 ```
 
-### 🔤 **대소문자 우회**
-```html
-<ScRiPt>alert("XSS")</ScRiPt>
-```
+## 🔧 관리 명령어
 
-### 🖥️ **iframe 스크립트**
-```html
-<iframe src="javascript:alert('XSS')">
-```
-
-## 🎓 교육적 특징
-
-### 📚 **비교 학습**
-- **취약한 코드**: 실제 XSS 공격이 성공하는 코드
-- **안전한 코드**: 같은 기능이지만 보안이 적용된 코드
-- **언어별 차이**: 각 언어의 고유한 보안 방법 비교
-
-### 🔍 **시각적 분석**
-- **공격 흐름도**: XSS 동작 원리를 단계별로 시각화
-- **실시간 결과**: 버튼 클릭으로 즉시 코드 실행 결과 확인
-- **상태 표시**: 공격 성공/실패를 직관적 아이콘으로 표시
-
-## 🛠️ 관리 명령어
-
-### 🎯 **주요 명령어**
 ```bash
-make help      # 📖 전체 명령어 도움말
-make xss       # 🚀 XSS 테스트 환경 시작 (추천)
-make status    # 📊 컨테이너 상태 확인
-make logs      # 📝 실시간 로그 보기
-make stop      # ⏹️ 모든 컨테이너 중지
-make clean     # 🧹 완전 정리 (볼륨 포함)
-make restart   # 🔄 빠른 재시작
-```
-
-### 🧪 **테스트 명령어**
-```bash
-make test-xss  # 🎯 XSS 자동 테스트
-make test-api  # 🔌 API 엔드포인트 테스트
-```
-
-## 🌐 접속 주소
-
-| 서비스 | URL | 설명 | 상태 |
-|--------|-----|------|------|
-| **통합 대시보드** | http://localhost | 모든 언어 통합 테스트 | ✅ **운영중** |
-| PHP Server | http://localhost:8080 | PHP XSS 엔드포인트 | ✅ 완료 |
-| Node.js Server | http://localhost:3000 | Express XSS 엔드포인트 | ✅ 완료 |
-| Python Server | http://localhost:5000 | Flask XSS 엔드포인트 | ✅ 완료 |
-| Java Server | http://localhost:8081 | Spring Boot XSS 엔드포인트 | ✅ 완료 |
-| Go Server | http://localhost:8082 | Gin XSS 엔드포인트 | ✅ 완료 |
-
-## 💻 XSS 엔드포인트 API
-
-### 📡 **모든 언어 공통 API**
-```bash
-# 취약한 엔드포인트
-GET /{language-server}/xss/vulnerable?input=<script>alert("XSS")</script>
-
-# 안전한 엔드포인트
-GET /{language-server}/xss/safe?input=<script>alert("XSS")</script>
-```
-
-### 🔍 **테스트 예시**
-```bash
-# PHP 취약한 엔드포인트
-curl "http://localhost:8080/xss/vulnerable?input=<script>alert('XSS')</script>"
-
-# Node.js 안전한 엔드포인트
-curl "http://localhost:3000/xss/safe?input=<script>alert('XSS')</script>"
-
-# Python 취약한 엔드포인트
-curl "http://localhost:5000/xss/vulnerable?input=<script>alert('XSS')</script>"
+make help      # 도움말 보기
+make start     # 서버 시작
+make stop      # 서버 중지
+make status    # 상태 확인
+make test      # API 테스트
+make clean     # 완전 정리
 ```
 
 ## 🚀 현재 구현 현황

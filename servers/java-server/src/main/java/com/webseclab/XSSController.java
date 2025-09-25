@@ -21,18 +21,5 @@ public class XSSController {
         return "<h1>User Input: " + safeInput + "</h1>";
     }
 
-    @GetMapping("/vulnerabilities")
-    public String vulnerabilities() {
-        return "{\"message\": \"WebSec-Lab Java Server\", \"available\": [\"GET /xss/vulnerable\", \"GET /xss/safe\", \"GET /sql/vulnerable/login\", \"GET /sql/safe/login\", \"GET /sql/vulnerable/search\", \"GET /sql/safe/search\"]}";
-    }
 
-    @GetMapping("/health")
-    public String health() {
-        return "{\"status\": \"healthy\", \"service\": \"websec-java\"}";
-    }
-
-    @GetMapping("/")
-    public String home() {
-        return "{\"message\": \"WebSec-Lab Java Server\", \"version\": \"2.0.0\", \"endpoints\": [\"/health\", \"/xss/vulnerable\", \"/xss/safe\"]}";
-    }
 }

@@ -37,6 +37,52 @@ def home():
     })
 
 # XSS Test Endpoints
+@app.route('/vulnerabilities/xss', methods=['POST'])
+def xss_test():
+    try:
+        data = request.get_json()
+        print(f"[DEBUG] Received data: {data}")
+        payload = data.get('payload', '<script>alert("XSS")</script>')
+        mode = data.get('mode', 'vulnerable')
+        print(f"[DEBUG] Payload: {payload}, Mode: {mode}")
+
+        if mode == 'vulnerable':
+            # 취약한 코드 - 직접 출력
+            result = f'<h1>User Input: {payload}</h1>'
+            attack_success = '<script>' in payload or 'javascript:' in payload
+        else:
+            # 안전한 코드 - HTML 이스케이프
+            safe_input = html.escape(payload)
+            result = f'<h1>User Input: {safe_input}</h1>'
+            attack_success = False
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'result': result,
+                'vulnerability_detected': attack_success,
+                'payload_used': payload,
+                'attack_success': attack_success,
+                'execution_time': '0.001s'
+            },
+            'metadata': {
+                'language': 'python',
+                'vulnerability_type': 'xss',
+                'mode': mode,
+                'timestamp': datetime.now().isoformat()
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'metadata': {
+                'language': 'python',
+                'vulnerability_type': 'xss',
+                'mode': mode
+            }
+        }), 500
+
 @app.route('/xss/vulnerable', methods=['GET'])
 def xss_vulnerable():
     user_input = request.args.get('input', '<script>alert("XSS")</script>')

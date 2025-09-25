@@ -1,0 +1,22 @@
+# Python 기반 간단한 HTTP 서버
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# 필요한 패키지 설치
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 대시보드 파일들 복사
+COPY . .
+
+# 포트 노출
+EXPOSE 80
+
+# 헬스체크
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+
+# Python HTTP 서버 시작
+CMD ["python", "-m", "http.server", "80"]

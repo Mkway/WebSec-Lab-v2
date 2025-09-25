@@ -1,7 +1,7 @@
 package com.webseclab;
 
 import org.springframework.stereotype.Service;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.sql.*;
 import java.util.*;
 
@@ -543,6 +543,101 @@ public class SQLInjectionService {
             long executionTime = System.currentTimeMillis() - startTime;
             result.put("success", false);
             result.put("safe_query", "SELECT * FROM users WHERE id = ?");
+            result.put("error", "Database error (not SQL injection)");
+            result.put("execution_time", executionTime / 1000.0);
+        }
+
+        return result;
+    }
+
+    /**
+     * 취약한 UNION SELECT 실행
+     */
+    private Map<String, Object> vulnerableUnionSelect(String payload) throws SQLException {
+        Map<String, Object> result = new HashMap<>();
+        long startTime = System.currentTimeMillis();
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            String query = "SELECT id, username FROM users WHERE id = " + payload;
+            result.put("vulnerable_query", query);
+            result.put("payload_used", payload);
+
+            ResultSet rs = stmt.executeQuery(query);
+            List<Map<String, Object>> data = new ArrayList<>();
+
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", rs.getInt("id"));
+                row.put("username", rs.getString("username"));
+                data.add(row);
+            }
+
+            long executionTime = System.currentTimeMillis() - startTime;
+            result.put("success", true);
+            result.put("data", data);
+            result.put("attack_successful", true);
+            result.put("execution_time", executionTime / 1000.0);
+            result.put("educational_note", "UNION SELECT attack successful - database structure exposed");
+
+        } catch (SQLException e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            result.put("success", false);
+            result.put("error", e.getMessage());
+            result.put("sql_error", true);
+            result.put("execution_time", executionTime / 1000.0);
+        }
+
+        return result;
+    }
+
+    /**
+     * 안전한 UNION SELECT 실행 (방어)
+     */
+    private Map<String, Object> safeUnionSelect(String payload) throws SQLException {
+        Map<String, Object> result = new HashMap<>();
+        long startTime = System.currentTimeMillis();
+
+        try (Connection conn = getConnection()) {
+            // Prepared statement 사용으로 SQL 인젝션 방지
+            String query = "SELECT id, username FROM users WHERE id = ?";
+            PreparedStatement pstmt = conn.prepareStatement(query);
+
+            try {
+                int id = Integer.parseInt(payload);
+                pstmt.setInt(1, id);
+            } catch (NumberFormatException e) {
+                result.put("success", false);
+                result.put("error", "Invalid input: ID must be a number");
+                result.put("safe_query", query);
+                result.put("educational_note", "Input validation prevents injection");
+                return result;
+            }
+
+            result.put("safe_query", query);
+            result.put("payload_sanitized", payload);
+
+            ResultSet rs = pstmt.executeQuery();
+            List<Map<String, Object>> data = new ArrayList<>();
+
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("id", rs.getInt("id"));
+                row.put("username", rs.getString("username"));
+                data.add(row);
+            }
+
+            long executionTime = System.currentTimeMillis() - startTime;
+            result.put("success", true);
+            result.put("data", data);
+            result.put("attack_prevented", true);
+            result.put("execution_time", executionTime / 1000.0);
+            result.put("educational_note", "Prepared statement prevents UNION SELECT injection");
+
+        } catch (SQLException e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            result.put("success", false);
             result.put("error", "Database error (not SQL injection)");
             result.put("execution_time", executionTime / 1000.0);
         }

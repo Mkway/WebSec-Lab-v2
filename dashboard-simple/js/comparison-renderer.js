@@ -154,12 +154,17 @@ if ($stmt->rowCount() > 0) {
     static renderXSSComparison(vulnerableResult, safeResult) {
         const server = SERVERS[vulnerableResult.language];
 
-        // 공격 성공 여부 분석
-        const vulnerableXSS = vulnerableResult.data?.result?.xss_detected;
-        const safeXSS = safeResult.data?.result?.xss_detected;
+        // 디버깅을 위한 로그
+        console.log('🔍 [DEBUG] Vulnerable Result:', vulnerableResult);
+        console.log('🔍 [DEBUG] Safe Result:', safeResult);
 
-        const vulnerableOutput = vulnerableResult.data?.result?.html_output || '';
-        const safeOutput = safeResult.data?.result?.html_output || '';
+        // 공격 성공 여부 분석 (Python 서버 응답 형식에 맞게 수정)
+        const vulnerableXSS = vulnerableResult.data?.data?.attack_success || vulnerableResult.data?.data?.vulnerability_detected;
+        const safeXSS = safeResult.data?.data?.attack_success || safeResult.data?.data?.vulnerability_detected;
+
+        const vulnerableOutput = vulnerableResult.data?.data?.result || '';
+        const safeOutput = safeResult.data?.data?.result || '';
+        const payload = vulnerableResult.requestData?.payload || '<script>alert("XSS")</script>';
 
         return `
             <div class="comparison-container">
@@ -208,7 +213,7 @@ echo "&lt;/div&gt;";</code></pre>
                                 </div>
                                 ${vulnerableXSS ? `
                                     <div class="xss-demo">
-                                        <button onclick="VulnerabilityRenderer.executeXSS('${vulnerableResult.requestData.payload.replace(/'/g, "\\'")}')">
+                                        <button onclick="VulnerabilityRenderer.executeXSS(decodeURIComponent('${encodeURIComponent(payload)}'))">
                                             ⚡ 실제 XSS 실행해보기
                                         </button>
                                     </div>

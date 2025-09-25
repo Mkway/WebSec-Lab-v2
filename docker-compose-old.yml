@@ -1,0 +1,223 @@
+version: '3.8'
+
+services:
+  # ===== 웹 대시보드 =====
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: websec-dashboard
+    ports:
+      - "80:80"
+    volumes:
+      # 개발 편의성을 위한 Volume Mount - 코드 변경 시 즉시 반영
+      - ./dashboard/public:/usr/share/nginx/html
+      - ./dashboard/assets:/usr/share/nginx/html/assets
+    depends_on:
+      - php-server
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["core", "dashboard", "all"]
+
+  # ===== PHP 서버 (XSS 구현 완료) =====
+  php-server:
+    build:
+      context: ./servers/php-server
+      dockerfile: Dockerfile
+    container_name: websec-php
+    ports:
+      - "8080:80"
+    environment:
+      - APP_ENV=development
+      - DB_HOST=mysql
+      - DB_NAME=websec_php
+      - DB_USER=websec
+      - DB_PASS=websec123
+      - REDIS_HOST=redis
+    volumes:
+      - ./servers/php-server:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["core", "php", "all"]
+
+  # ===== Node.js 서버 =====
+  nodejs-server:
+    build:
+      context: ./servers/nodejs-server
+      dockerfile: Dockerfile
+    container_name: websec-nodejs
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/websec_nodejs?authSource=admin
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./servers/nodejs-server:/app
+    depends_on:
+      - mongodb
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["nodejs", "all"]
+
+  # ===== Python 서버 =====
+  python-server:
+    build:
+      context: ./servers/python-server
+      dockerfile: Dockerfile
+    container_name: websec-python
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://websec:websec123@postgres:5432/websec_python
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/websec_python?authSource=admin
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./servers/python-server:/app
+    depends_on:
+      - postgres
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["python", "all"]
+
+  # ===== Java 서버 =====
+  java-server:
+    build:
+      context: ./servers/java-server
+      dockerfile: Dockerfile
+    container_name: websec-java
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=development
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/websec_java
+      - SPRING_DATASOURCE_USERNAME=websec
+      - SPRING_DATASOURCE_PASSWORD=websec123
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:admin123@mongodb:27017/websec_java?authSource=admin
+      - SPRING_REDIS_HOST=redis
+    volumes:
+      - ./servers/java-server:/app
+    depends_on:
+      - mysql
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["java", "all"]
+
+  # ===== Go 서버 =====
+  go-server:
+    build:
+      context: ./servers/go-server
+      dockerfile: Dockerfile
+    container_name: websec-go
+    ports:
+      - "8082:8080"
+    environment:
+      - GIN_MODE=debug
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=websec_go
+      - DB_USER=websec
+      - DB_PASS=websec123
+      - REDIS_ADDR=redis:6379
+    volumes:
+      - ./servers/go-server:/app
+    depends_on:
+      - mysql
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["go", "all"]
+
+  # ===== 데이터베이스 서비스들 =====
+  mysql:
+    image: mysql:8.0
+    container_name: websec-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass123
+      - MYSQL_DATABASE=websec_lab
+      - MYSQL_USER=websec
+      - MYSQL_PASSWORD=websec123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/mysql/init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["core", "php", "java", "go", "all"]
+
+  postgres:
+    image: postgres:15
+    container_name: websec-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=websec_sql_test
+      - POSTGRES_USER=websec
+      - POSTGRES_PASSWORD=websec123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["python", "all"]
+
+  mongodb:
+    image: mongo:6.0
+    container_name: websec-mongodb
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin123
+      - MONGO_INITDB_DATABASE=websec_test
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["nodejs", "python", "all"]
+
+  redis:
+    image: redis:7-alpine
+    container_name: websec-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - websec-network
+    restart: unless-stopped
+    profiles: ["core", "php", "all"]
+
+# ===== 볼륨 정의 =====
+volumes:
+  mysql_data:
+    driver: local
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ===== 네트워크 정의 =====
+networks:
+  websec-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
