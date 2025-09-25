@@ -1,14 +1,14 @@
 services:
-  # ===== Simple Dashboard =====
+  # ===== Main Dashboard =====
   dashboard:
     build:
-      context: ./dashboard-simple
+      context: ./dashboard
       dockerfile: Dockerfile.local
     container_name: websec-dashboard
     ports:
       - "80:80"
     volumes:
-      - ./dashboard-simple:/app:ro
+      - ./dashboard:/app:ro
     depends_on:
       - php-server
     networks:

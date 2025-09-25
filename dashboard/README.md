@@ -1,11 +1,11 @@
-# WebSec-Lab v2 - Simple Dashboard
+# WebSec-Lab v2 - Main Dashboard
 
 ## 🎯 개요
 Vue.js의 복잡함을 제거하고 **순수 HTML + CSS + JavaScript**로 구현한 간단한 대시보드입니다.
 
 ## 📁 구조
 ```
-dashboard-simple/
+dashboard/
 ├── index.html          # 메인 HTML 파일
 ├── css/
 │   └── style.css       # CSS 스타일 (250줄)
@@ -18,7 +18,7 @@ dashboard-simple/
 
 ### 1. 간단한 HTTP 서버 시작
 ```bash
-cd dashboard-simple
+cd dashboard
 python3 -m http.server 8090
 ```
 
@@ -72,7 +72,7 @@ http://localhost:8090
 
 ## 📋 기존 Vue.js와 비교
 
-| 항목 | Vue.js 대시보드 | Simple 대시보드 |
+| 항목 | Vue.js 대시보드 | Main 대시보드 |
 |------|-----------------|-----------------|
 | 파일 수 | 15+ 파일 | 3 파일 |
 | 코드 라인 수 | 800+ 줄 | 450 줄 |

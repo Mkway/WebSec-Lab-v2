@@ -1,20 +1,16 @@
-FROM nginx:alpine
+# 기존 Nginx 이미지 사용 (Docker Hub 문제 회피)
+FROM nginx:1.25-alpine
 
-# 시스템 패키지 업데이트
-RUN apk update && apk add --no-cache \
-    curl \
-    && rm -rf /var/cache/apk/*
+# 시스템 업데이트 및 curl 설치
+RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*
 
-# Nginx 설정
+# Nginx 설정 파일 복사
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 간단한 대시보드 파일 복사 (우선순위)
-COPY dashboard-simple/ /usr/share/nginx/html/
-
-# 기존 Vue 대시보드 파일 복사 (백업용)
-COPY public/ /usr/share/nginx/html/vue/
-COPY assets/ /usr/share/nginx/html/vue/assets/
-COPY components/ /usr/share/nginx/html/vue/components/
+# Simple Dashboard 파일들 복사
+COPY index.html /usr/share/nginx/html/
+COPY css/ /usr/share/nginx/html/css/
+COPY js/ /usr/share/nginx/html/js/
 
 # 포트 노출
 EXPOSE 80

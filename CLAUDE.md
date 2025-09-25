@@ -283,7 +283,7 @@ npm run build && ls -la dist/
 **🔧 Docker Volume Mount 설정 완료**
 - Dashboard는 volume mount로 설정되어 실시간 반영됨
 - **파일 수정 후 Docker 재시작 불필요** - 브라우저 새로고침만 하면 됨
-- `./dashboard-simple:/app:ro` 볼륨 마운트 설정됨
+- `./dashboard:/app:ro` 볼륨 마운트 설정됨
 - JavaScript, HTML, CSS 파일 수정 시 즉시 반영
 
 ### 작업 완료 시 필수 절차
