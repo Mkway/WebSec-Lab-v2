@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"./sqlinjection"
+	"github.com/websec-lab/websec-lab-v2/go-server/sqlinjection"
 )
 
 func main() {

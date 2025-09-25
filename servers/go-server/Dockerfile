@@ -13,6 +13,9 @@ RUN go mod download
 # 애플리케이션 소스 복사
 COPY . .
 
+# Go 모듈 정리 및 의존성 추가
+RUN go mod tidy
+
 # 애플리케이션 빌드
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main ./src
 
