@@ -82,7 +82,7 @@
                     <h3>🔥 XSS 테스트</h3>
                     <div class="input-group">
                         <label for="xss-payload">XSS 페이로드:</label>
-                        <textarea id="xss-payload" placeholder="XSS 페이로드를 입력하세요"><script>alert("XSS")</script></textarea>
+                        <textarea id="xss-payload" placeholder="XSS 페이로드를 입력하세요" value="&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;">&lt;script&gt;alert("XSS")&lt;/script&gt;</textarea>
                     </div>
                     <div class="quick-payloads">
                         <h4>빠른 페이로드:</h4>

@@ -224,9 +224,10 @@ echo "&lt;/div&gt;";</code></pre>
                                 </div>
                                 ${vulnerableXSS ? `
                                     <div class="xss-demo">
-                                        <button onclick="VulnerabilityRenderer.executeXSS(decodeURIComponent('${encodeURIComponent(payload)}'))">
-                                            ⚡ 실제 XSS 실행해보기
-                                        </button>
+                                        <div class="xss-live-execution">
+                                            <strong>⚠️ 실제 XSS 실행:</strong>
+                                            <div class="xss-payload-live">${vulnerableResult.data.result.html_output || payload}</div>
+                                        </div>
                                     </div>
                                 ` : ''}
                             </div>

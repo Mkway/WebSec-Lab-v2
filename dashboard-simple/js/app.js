@@ -34,6 +34,13 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     checkServerStatus();
     updateVulnerabilityInputs();
+
+    // XSS textarea 기본값 강제 설정
+    setTimeout(() => {
+        if (elements.xssPayload && (!elements.xssPayload.value || elements.xssPayload.value.trim() === '')) {
+            elements.xssPayload.value = '<script>alert("XSS")</script>';
+        }
+    }, 100);
 });
 
 // DOM 요소 초기화
@@ -84,6 +91,11 @@ function updateVulnerabilityInputs() {
     } else if (currentVulnerability === 'xss') {
         elements.sqlInputs.style.display = 'none';
         elements.xssInputs.style.display = 'block';
+
+        // XSS textarea에 기본값이 없으면 설정
+        if (!elements.xssPayload.value || elements.xssPayload.value.trim() === '') {
+            elements.xssPayload.value = '<script>alert("XSS")</script>';
+        }
     }
 }
 
@@ -158,11 +170,21 @@ async function executeTest(language, vulnerability, mode) {
         };
     } else if (vulnerability === 'xss') {
         endpoint = '/vulnerabilities/xss';
+
+        // XSS 페이로드 값 강제 확인 및 설정
+        let xssPayload = elements.xssPayload.value;
+        if (!xssPayload || xssPayload.trim() === '') {
+            xssPayload = '<script>alert("XSS")</script>';
+            elements.xssPayload.value = xssPayload;
+        }
+
         requestData = {
             mode: mode,
-            payload: elements.xssPayload.value,
+            payload: xssPayload,
             target: 'search'
         };
+
+        console.log('XSS payload being sent:', xssPayload);
     }
 
     console.log(`🔍 Testing ${language} ${vulnerability} (${mode}):`, requestData);
