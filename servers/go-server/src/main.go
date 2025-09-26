@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"html"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -244,10 +246,132 @@ func main() {
 		})
 	})
 
+	// 표준 엔드포인트 추가 (Dashboard 호환성)
+	r.POST("/vulnerabilities/sql-injection", func(c *gin.Context) {
+		if sqlInj == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"error":   "SQL injection service not available",
+			})
+			return
+		}
+
+		var requestData map[string]interface{}
+		if err := c.ShouldBindJSON(&requestData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   "Invalid JSON data",
+			})
+			return
+		}
+
+		mode, _ := requestData["mode"].(string)
+		if mode == "" {
+			mode = "vulnerable"
+		}
+
+		username, _ := requestData["username"].(string)
+		if username == "" {
+			username = "admin"
+		}
+
+		password, _ := requestData["password"].(string)
+		if password == "" {
+			password = "test"
+		}
+
+		parameters := map[string]string{
+			"test_type": "login",
+			"target":    "username",
+			"username":  username,
+			"password":  password,
+		}
+
+		var result interface{}
+		if mode == "vulnerable" {
+			result = sqlInj.ExecuteVulnerableCode(username, parameters)
+		} else {
+			result = sqlInj.ExecuteSafeCode(username, parameters)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    result,
+			"metadata": gin.H{
+				"language":           "go",
+				"vulnerability_type": "sql_injection",
+				"mode":               mode,
+				"timestamp":          time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+
+	// XSS 표준 엔드포인트 추가 (Dashboard 호환성)
+	r.POST("/vulnerabilities/xss", func(c *gin.Context) {
+		var requestData map[string]interface{}
+		if err := c.ShouldBindJSON(&requestData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   "Invalid JSON data",
+			})
+			return
+		}
+
+		mode, _ := requestData["mode"].(string)
+		if mode == "" {
+			mode = "vulnerable"
+		}
+
+		payload, _ := requestData["payload"].(string)
+		if payload == "" {
+			payload = `<script>alert("XSS")</script>`
+		}
+
+		var result string
+		var attackSuccess bool
+
+		if mode == "vulnerable" {
+			// 취약한 코드 - 직접 출력
+			result = fmt.Sprintf("<h1>User Input: %s</h1>", payload)
+			attackSuccess = strings.Contains(payload, "<script>") || strings.Contains(payload, "javascript:")
+		} else {
+			// 안전한 코드 - HTML 이스케이프
+			safeInput := html.EscapeString(payload)
+			result = fmt.Sprintf("<h1>User Input: %s</h1>", safeInput)
+			attackSuccess = false
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data": gin.H{
+				"result":                result,
+				"vulnerability_detected": attackSuccess,
+				"payload_used":          payload,
+				"attack_success":        attackSuccess,
+				"execution_time":        "0.001s",
+			},
+			"metadata": gin.H{
+				"language":          "go",
+				"vulnerability_type": "xss",
+				"mode":              mode,
+				"timestamp":         time.Now().Format(time.RFC3339),
+			},
+		})
+	})
+
 	r.GET("/vulnerabilities", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message":   "WebSec-Lab Go Server",
-			"available": []string{"GET /xss/vulnerable", "GET /xss/safe", "GET /sql/vulnerable/login", "GET /sql/safe/login", "GET /sql/vulnerable/search", "GET /sql/safe/search"},
+			"message": "WebSec-Lab Go Server",
+			"available": []string{
+				"POST /vulnerabilities/sql-injection",
+				"POST /vulnerabilities/xss",
+				"GET /xss/vulnerable",
+				"GET /xss/safe",
+				"GET /sql/vulnerable/login",
+				"GET /sql/safe/login",
+				"GET /sql/vulnerable/search",
+				"GET /sql/safe/search",
+			},
 		})
 	})
 
