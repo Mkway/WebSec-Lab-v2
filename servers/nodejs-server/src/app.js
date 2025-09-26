@@ -174,10 +174,60 @@ app.get('/sql/safe/search', async (req, res) => {
     }
 });
 
+// Standard endpoints for dashboard compatibility
+app.post('/vulnerabilities/xss', (req, res) => {
+    try {
+        const { mode, payload } = req.body;
+        const mode_safe = mode || 'vulnerable';
+        const payload_safe = payload || '<script>alert("XSS")</script>';
+
+        let result, attackSuccess;
+
+        if (mode_safe === 'vulnerable') {
+            // 취약한 코드 - 직접 출력
+            result = `<h1>User Input: ${payload_safe}</h1>`;
+            attackSuccess = payload_safe.includes('<script>') || payload_safe.includes('javascript:');
+        } else {
+            // 안전한 코드 - HTML 이스케이프
+            const escapeHtml = (text) => text.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+            result = `<h1>User Input: ${escapeHtml(payload_safe)}</h1>`;
+            attackSuccess = false;
+        }
+
+        res.json({
+            success: true,
+            data: {
+                result: result,
+                vulnerability_detected: attackSuccess,
+                payload_used: payload_safe,
+                attack_success: attackSuccess,
+                execution_time: '0.001s'
+            },
+            metadata: {
+                language: 'nodejs',
+                vulnerability_type: 'xss',
+                mode: mode_safe,
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            metadata: {
+                language: 'nodejs',
+                vulnerability_type: 'xss',
+                mode: req.body?.mode || 'vulnerable'
+            }
+        });
+    }
+});
+
 app.use('/vulnerabilities', (req, res) => {
     res.json({
         message: 'WebSec-Lab Node.js Server',
         available: [
+            'POST /vulnerabilities/xss',
             'GET /xss/vulnerable',
             'GET /xss/safe',
             'GET /sql/vulnerable/login',

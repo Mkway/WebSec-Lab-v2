@@ -26,6 +26,41 @@ class ComparisonRenderer {
                           safeResult.data?.success === true;
 
         return `
+            <!-- 취약점 이론 설명 -->
+            <div class="vulnerability-theory">
+                <div class="theory-header">
+                    <span class="theory-icon">💉</span>
+                    <h2 class="theory-title">SQL Injection 취약점 이론</h2>
+                </div>
+
+                <div class="vulnerability-diagram">
+                    <h3>🎯 공격 원리 다이어그램</h3>
+                    <div class="attack-flow">
+                        <div class="flow-step">1. 사용자 입력</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">2. SQL 쿼리 삽입</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">3. DB 실행</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">4. 인증 우회</div>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>🔍 공격 벡터</h4>
+                        <p><strong>입력:</strong> <code>admin' OR '1'='1</code></p>
+                        <p><strong>쿼리:</strong> <code>SELECT * FROM users WHERE username = 'admin' OR '1'='1' AND password = '...'</code></p>
+                        <p><strong>결과:</strong> OR 조건으로 인해 항상 TRUE가 되어 인증 우회</p>
+                    </div>
+
+                    <div class="defense-strategy">
+                        <h4>🛡️ 방어 전략</h4>
+                        <p><strong>Prepared Statement:</strong> SQL과 데이터를 분리하여 쿼리 구조 변경 방지</p>
+                        <p><strong>입력 검증:</strong> 특수문자 필터링 및 데이터 타입 검증</p>
+                        <p><strong>최소 권한:</strong> 데이터베이스 사용자 권한 최소화</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="comparison-container">
                 <!-- 비교 개요 -->
                 <div class="comparison-overview">
@@ -178,6 +213,51 @@ if ($stmt->rowCount() > 0) {
         const payload = vulnerableResult.requestData?.payload || '<script>alert("XSS")</script>';
 
         return `
+            <!-- XSS 취약점 이론 설명 -->
+            <div class="vulnerability-theory">
+                <div class="theory-header">
+                    <span class="theory-icon">🔥</span>
+                    <h2 class="theory-title">Cross-Site Scripting (XSS) 취약점 이론</h2>
+                </div>
+
+                <div class="vulnerability-diagram">
+                    <h3>🎯 공격 원리 다이어그램</h3>
+                    <div class="attack-flow">
+                        <div class="flow-step">1. 악성 스크립트 입력</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">2. HTML에 직접 삽입</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">3. 브라우저 렌더링</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">4. 스크립트 실행</div>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>🔍 공격 벡터</h4>
+                        <p><strong>입력:</strong> <code>&lt;script&gt;alert("XSS")&lt;/script&gt;</code></p>
+                        <p><strong>HTML:</strong> <code>&lt;div&gt;검색결과: &lt;script&gt;alert("XSS")&lt;/script&gt;&lt;/div&gt;</code></p>
+                        <p><strong>결과:</strong> 브라우저에서 JavaScript 코드가 실행되어 사용자 공격</p>
+                    </div>
+
+                    <div class="defense-strategy">
+                        <h4>🛡️ 방어 전략</h4>
+                        <p><strong>HTML 이스케이프:</strong> &lt;, &gt;, &amp; 등 특수문자를 안전한 엔티티로 변환</p>
+                        <p><strong>CSP 헤더:</strong> Content Security Policy로 스크립트 실행 제어</p>
+                        <p><strong>입력 검증:</strong> 허용된 태그와 속성만 허용하는 화이트리스트 필터링</p>
+                    </div>
+
+                    <div class="code-flow-diagram vulnerable-flow">
+                        <strong>🚨 취약한 코드 흐름:</strong><br>
+                        사용자 입력 → 직접 HTML 출력 → 브라우저 실행 → 공격 성공
+                    </div>
+
+                    <div class="code-flow-diagram safe-flow">
+                        <strong>🛡️ 안전한 코드 흐름:</strong><br>
+                        사용자 입력 → HTML 이스케이프 → 안전한 텍스트 출력 → 공격 차단
+                    </div>
+                </div>
+            </div>
+
             <div class="comparison-container">
                 <!-- 비교 개요 -->
                 <div class="comparison-overview">
@@ -226,7 +306,9 @@ echo "&lt;/div&gt;";</code></pre>
                                     <div class="xss-demo">
                                         <div class="xss-live-execution">
                                             <strong>⚠️ 실제 XSS 실행:</strong>
-                                            <div class="xss-payload-live">${vulnerableResult.data.result.html_output || payload}</div>
+                                            <div class="xss-payload-live">
+                                                ${ComparisonRenderer.executeXSS(vulnerableOutput || payload)}
+                                            </div>
                                         </div>
                                     </div>
                                 ` : ''}
@@ -289,5 +371,26 @@ echo "&lt;/div&gt;";</code></pre>
                 </div>
             </div>
         `;
+    }
+
+    // XSS 실행 메서드 (Vue 버전과 동일)
+    static executeXSS(payload) {
+        try {
+            // 실제 XSS 실행
+            setTimeout(() => {
+                executeXSSScript(payload);
+            }, 500);
+
+            return `
+                <div class="alert alert-success mb-3">
+                    <strong>✅ XSS 공격 실행됨!</strong>
+                    JavaScript alert가 실행되었습니다.
+                </div>
+                ${payload}
+            `;
+        } catch (error) {
+            console.error('XSS 실행 오류:', error);
+            return payload;
+        }
     }
 }

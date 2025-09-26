@@ -219,11 +219,58 @@ def sql_safe_search():
             'error': str(e)
         }), 500
 
+# 표준 엔드포인트 추가 (Dashboard 호환성)
+@app.route('/vulnerabilities/sql-injection', methods=['POST'])
+def sql_injection_standard():
+    try:
+        data = request.get_json()
+        mode = data.get('mode', 'vulnerable')
+        username = data.get('username', 'admin')
+        password = data.get('password', 'test')
+
+        if mode == 'vulnerable':
+            result = sql_injection.execute_vulnerable_code(username, {
+                'test_type': 'login',
+                'target': 'username',
+                'username': username,
+                'password': password
+            })
+        else:
+            result = sql_injection.execute_safe_code(username, {
+                'test_type': 'login',
+                'target': 'username',
+                'username': username,
+                'password': password
+            })
+
+        return jsonify({
+            'success': True,
+            'data': result,
+            'metadata': {
+                'language': 'python',
+                'vulnerability_type': 'sql_injection',
+                'mode': mode,
+                'timestamp': datetime.now().isoformat()
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'metadata': {
+                'language': 'python',
+                'vulnerability_type': 'sql_injection',
+                'mode': mode
+            }
+        }), 500
+
 @app.route('/vulnerabilities', methods=['GET', 'POST'])
 def vulnerabilities():
     return jsonify({
         'message': 'WebSec-Lab Python Server',
         'available': [
+            'POST /vulnerabilities/sql-injection',
+            'POST /vulnerabilities/xss',
             'GET /xss/vulnerable',
             'GET /xss/safe',
             'GET /sql/vulnerable/login',

@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // DOM 요소 초기화
 function initializeElements() {
     elements = {
-        language: document.getElementById('language'),
         vulnItems: document.querySelectorAll('.vuln-sidebar-item'),
         sqlInputs: document.getElementById('sql-inputs'),
         xssInputs: document.getElementById('xss-inputs'),
@@ -59,6 +58,13 @@ function initializeElements() {
         resultsContent: document.getElementById('results-content'),
         serverStatus: document.getElementById('server-status-content')
     };
+
+    // 요소 존재 여부 확인 및 오류 방지
+    console.log('Elements initialized:', {
+        sqlUsername: elements.sqlUsername !== null,
+        sqlPassword: elements.sqlPassword !== null,
+        xssPayload: elements.xssPayload !== null
+    });
 }
 
 // 이벤트 리스너 설정
@@ -118,30 +124,48 @@ function applyXssPayload(type) {
     }
 }
 
-// 메인 테스트 실행 함수
+// 메인 테스트 실행 함수 - 모든 언어 동시 테스트
 async function runTest() {
-    const language = elements.language.value;
     const vulnerability = currentVulnerability;
 
-    // 서버 상태 확인
-    const server = SERVERS[language];
-    if (!server) {
-        showMessage('잘못된 언어가 선택되었습니다.', 'error');
-        return;
-    }
+    console.log('🔍 Starting runTest with vulnerability:', vulnerability);
+    console.log('🔍 Elements check:', {
+        sqlUsername: elements.sqlUsername,
+        sqlPassword: elements.sqlPassword,
+        xssPayload: elements.xssPayload
+    });
 
     // 로딩 상태 표시
     showLoading(true);
     hideResults();
 
     try {
-        // 항상 취약한 버전과 안전한 버전 모두 테스트
-        const vulnerableResult = await executeTest(language, vulnerability, 'vulnerable');
-        const safeResult = await executeTest(language, vulnerability, 'safe');
+        // 모든 언어에 대해 동시에 테스트 실행
+        const allResults = [];
 
-        const results = [vulnerableResult, safeResult];
-        displayResults(results);
-        showMessage('✅ 비교 분석이 완료되었습니다!', 'success');
+        for (const language of Object.keys(SERVERS)) {
+            try {
+                // 각 언어별로 취약한 버전과 안전한 버전 모두 테스트
+                const vulnerableResult = await executeTest(language, vulnerability, 'vulnerable');
+                const safeResult = await executeTest(language, vulnerability, 'safe');
+
+                allResults.push({
+                    language,
+                    vulnerableResult,
+                    safeResult
+                });
+            } catch (error) {
+                console.error(`Error testing ${language}:`, error);
+                // 오류가 발생한 언어는 오류 결과로 추가
+                allResults.push({
+                    language,
+                    error: error.message
+                });
+            }
+        }
+
+        displayAllLanguageResults(allResults);
+        showMessage('✅ 모든 언어 비교 분석이 완료되었습니다!', 'success');
 
     } catch (error) {
         console.error('Test error:', error);
@@ -161,21 +185,27 @@ async function executeTest(language, vulnerability, mode) {
 
     if (vulnerability === 'sql-injection') {
         endpoint = '/vulnerabilities/sql-injection';
+        // 요소 존재 여부 확인
+        const username = elements.sqlUsername ? elements.sqlUsername.value : "admin' OR '1'='1";
+        const password = elements.sqlPassword ? elements.sqlPassword.value : "' OR '1'='1";
+
         requestData = {
             mode: mode,
-            username: elements.sqlUsername.value,
-            password: elements.sqlPassword.value,
-            payload: elements.sqlUsername.value,
+            username: username,
+            password: password,
+            payload: username,
             target: 'login'
         };
     } else if (vulnerability === 'xss') {
         endpoint = '/vulnerabilities/xss';
 
         // XSS 페이로드 값 강제 확인 및 설정
-        let xssPayload = elements.xssPayload.value;
+        let xssPayload = elements.xssPayload ? elements.xssPayload.value : '';
         if (!xssPayload || xssPayload.trim() === '') {
             xssPayload = '<script>alert("XSS")</script>';
-            elements.xssPayload.value = xssPayload;
+            if (elements.xssPayload) {
+                elements.xssPayload.value = xssPayload;
+            }
         }
 
         requestData = {
@@ -214,7 +244,123 @@ async function executeTest(language, vulnerability, mode) {
     };
 }
 
-// 결과 표시 (비교 분석 버전)
+// 모든 언어 결과 표시 (접히는 카드 형식)
+function displayAllLanguageResults(allResults) {
+    const currentTime = Date.now();
+    let html = `
+        <div class="all-languages-results">
+            <div class="results-header">
+                <h2>🌍 모든 언어 취약점 비교 분석</h2>
+                <p>총 ${allResults.length}개 언어에서 동시 테스트 결과</p>
+                <div class="expand-all-controls">
+                    <button onclick="expandAllCards()" class="control-btn expand-btn">📂 모든 카드 열기</button>
+                    <button onclick="collapseAllCards()" class="control-btn collapse-btn">📁 모든 카드 접기</button>
+                </div>
+            </div>
+    `;
+
+    // 각 언어별 결과 카드
+    allResults.forEach((result, index) => {
+        const cardId = `card-${result.language}-${currentTime}`;
+        const contentId = `content-${result.language}-${currentTime}`;
+
+        if (result.error) {
+            html += `
+                <div class="language-result-card error-card" id="${cardId}">
+                    <div class="card-header" onclick="toggleCard('${contentId}', this)">
+                        <div class="card-title">
+                            <span class="server-info">${SERVERS[result.language].icon} ${SERVERS[result.language].name}</span>
+                            <span class="status-badge error">❌ 테스트 실패</span>
+                        </div>
+                        <div class="toggle-icon">▼</div>
+                    </div>
+                    <div class="card-content collapsed" id="${contentId}">
+                        <div class="error-details">
+                            <h4>오류 정보</h4>
+                            <div class="error-message">${result.error}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            const server = SERVERS[result.language];
+            const vulnerableResult = result.vulnerableResult;
+            const safeResult = result.safeResult;
+
+            // 공격 성공 여부 확인
+            let attackSuccess = false;
+            if (currentVulnerability === 'sql-injection') {
+                attackSuccess = vulnerableResult.data?.result?.authentication_bypassed || vulnerableResult.data?.success === true;
+            } else if (currentVulnerability === 'xss') {
+                attackSuccess = vulnerableResult.data?.data?.attack_success || vulnerableResult.data?.data?.vulnerability_detected;
+            }
+
+            html += `
+                <div class="language-result-card ${attackSuccess ? 'vulnerable' : 'safe'}" id="${cardId}">
+                    <div class="card-header" onclick="toggleCard('${contentId}', this)">
+                        <div class="card-title">
+                            <span class="server-info">${server.icon} ${server.name} (포트: ${server.port})</span>
+                            <span class="status-badge ${attackSuccess ? 'vulnerable' : 'safe'}">
+                                ${attackSuccess ? '⚠️ 취약점 발견' : '✅ 안전'}
+                            </span>
+                        </div>
+                        <div class="toggle-icon">▼</div>
+                    </div>
+                    <div class="card-content collapsed" id="${contentId}">
+                        <div class="vulnerability-analysis">
+                            ${ComparisonRenderer.render(vulnerableResult, safeResult)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    html += `</div>`;
+    elements.resultsContent.innerHTML = html;
+    showResults();
+}
+
+// 카드 토글 함수
+function toggleCard(contentId, headerElement) {
+    const content = document.getElementById(contentId);
+    const icon = headerElement.querySelector('.toggle-icon');
+
+    if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        content.classList.add('expanded');
+        icon.textContent = '▲';
+        headerElement.classList.add('active');
+    } else {
+        content.classList.remove('expanded');
+        content.classList.add('collapsed');
+        icon.textContent = '▼';
+        headerElement.classList.remove('active');
+    }
+}
+
+// 모든 카드 열기/접기
+function expandAllCards() {
+    document.querySelectorAll('.card-content.collapsed').forEach(content => {
+        const cardId = content.id;
+        const header = document.querySelector(`[onclick*="${cardId}"]`);
+        if (header) {
+            toggleCard(cardId, header);
+        }
+    });
+}
+
+function collapseAllCards() {
+    document.querySelectorAll('.card-content.expanded').forEach(content => {
+        const cardId = content.id;
+        const header = document.querySelector(`[onclick*="${cardId}"]`);
+        if (header) {
+            toggleCard(cardId, header);
+        }
+    });
+}
+
+// 결과 표시 (단일 언어 비교 분석 버전)
 function displayResults(results) {
     // results 배열에서 취약한 버전과 안전한 버전 분리
     const vulnerableResult = results.find(r => r.mode === 'vulnerable');
@@ -322,8 +468,16 @@ async function checkServerStatus() {
 
 // 유틸리티 함수들
 function showLoading(show) {
-    elements.loading.style.display = show ? 'block' : 'none';
-    elements.testBtn.disabled = show;
+    console.log('🔍 showLoading called with:', show);
+    console.log('🔍 elements.loading:', elements.loading);
+    console.log('🔍 elements.testBtn:', elements.testBtn);
+
+    if (elements.loading) {
+        elements.loading.style.display = show ? 'block' : 'none';
+    }
+    if (elements.testBtn) {
+        elements.testBtn.disabled = show;
+    }
 }
 
 function showResults() {

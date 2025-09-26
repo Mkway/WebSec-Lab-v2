@@ -485,6 +485,108 @@ body {
     font-size: 1rem;
 }
 
+/* Vulnerability Principles */
+.vulnerability-principles {
+    background: #f8f9fa;
+    border-left: 4px solid #17a2b8;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.vulnerability-principles h5 {
+    color: #17a2b8;
+    margin-bottom: 15px;
+}
+
+.principle-explanation {
+    line-height: 1.6;
+}
+
+.principle-explanation p {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+/* XSS Execution Styles */
+.xss-demo-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+}
+
+.xss-demo-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.xss-execution-result {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.xss-success {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.xss-effect {
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.xss-code {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-family: monospace;
+}
+
+.xss-info {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.xss-rendered {
+    background: white;
+    border: 1px solid #dc3545;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #dc3545;
+}
+
+.simulate-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    transition: all 0.2s ease;
+}
+
+.simulate-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
 .alert {
     padding: 12px 15px;
     border-radius: 6px;
@@ -931,4 +1033,395 @@ body {
     .raw-data-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* All Languages Results Styles */
+.all-languages-results {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.results-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.results-header h2 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
+.results-header p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.language-result-card {
+    margin-bottom: 30px;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.language-result-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+}
+
+.language-result-card.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+.language-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    font-weight: 600;
+}
+
+.language-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.comparison-content {
+    padding: 0;
+}
+
+.error-message {
+    padding: 20px;
+    color: #dc3545;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.info-message {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 15px;
+    color: #1565c0;
+    text-align: center;
+    font-size: 1rem;
+}
+
+/* Vulnerability Theory Diagram Styles */
+.vulnerability-theory {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+    border-left: 5px solid #667eea;
+}
+
+.theory-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.theory-icon {
+    font-size: 2rem;
+    margin-right: 15px;
+}
+
+.theory-title {
+    color: #333;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.vulnerability-diagram {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    border: 1px solid #dee2e6;
+}
+
+.attack-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.flow-step {
+    background: #667eea;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: center;
+    min-width: 150px;
+}
+
+.flow-arrow {
+    font-size: 1.5rem;
+    color: #667eea;
+}
+
+.attack-vector {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.attack-vector h4 {
+    color: #856404;
+    margin-bottom: 8px;
+}
+
+.defense-strategy {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.defense-strategy h4 {
+    color: #155724;
+    margin-bottom: 8px;
+}
+
+.code-flow-diagram {
+    font-family: 'Courier New', monospace;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    border-left: 4px solid #28a745;
+}
+
+.vulnerable-flow {
+    border-left-color: #dc3545;
+}
+
+.safe-flow {
+    border-left-color: #28a745;
+}
+
+/* Responsive adjustments for new styles */
+@media (max-width: 768px) {
+    .all-languages-results {
+        padding: 20px;
+    }
+
+    .results-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .language-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .attack-flow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flow-step {
+        min-width: auto;
+    }
+
+    .flow-arrow {
+        transform: rotate(90deg);
+        align-self: center;
+    }
+}
+
+/* Collapsible Card Styles */
+.expand-all-controls {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.control-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.language-result-card {
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.language-result-card.vulnerable {
+    border-left: 5px solid #ff6b6b;
+}
+
+.language-result-card.safe {
+    border-left: 5px solid #51cf66;
+}
+
+.language-result-card.error-card {
+    border-left: 5px solid #dc3545;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-header:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+.card-header.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.server-info {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.vulnerable {
+    background: #fff5f5;
+    color: #c53030;
+    border: 1px solid #fed7d7;
+}
+
+.status-badge.safe {
+    background: #f0fff4;
+    color: #2d5737;
+    border: 1px solid #9ae6b4;
+}
+
+.status-badge.error {
+    background: #fff5f5;
+    color: #e53e3e;
+    border: 1px solid #feb2b2;
+}
+
+.toggle-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+    color: #667eea;
+}
+
+.card-header.active .toggle-icon {
+    color: white;
+}
+
+.card-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.card-content.expanded {
+    max-height: 2000px;
+    opacity: 1;
+}
+
+.vulnerability-analysis {
+    padding: 0;
+}
+
+.error-details {
+    padding: 20px;
+    background: #fff5f5;
+}
+
+.error-details h4 {
+    color: #e53e3e;
+    margin-bottom: 10px;
+}
+
+.error-details .error-message {
+    color: #c53030;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border-left: 4px solid #e53e3e;
+    font-family: 'Courier New', monospace;
+}
+
+/* Animation improvements */
+@keyframes expandCard {
+    from {
+        max-height: 0;
+        opacity: 0;
+    }
+    to {
+        max-height: 2000px;
+        opacity: 1;
+    }
+}
+
+@keyframes collapseCard {
+    from {
+        max-height: 2000px;
+        opacity: 1;
+    }
+    to {
+        max-height: 0;
+        opacity: 0;
+    }
+}
+
+.card-content.expanding {
+    animation: expandCard 0.3s ease forwards;
+}
+
+.card-content.collapsing {
+    animation: collapseCard 0.3s ease forwards;
 }

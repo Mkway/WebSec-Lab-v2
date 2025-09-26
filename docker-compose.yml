@@ -3,12 +3,12 @@ services:
   dashboard:
     build:
       context: ./dashboard
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     container_name: websec-dashboard
     ports:
       - "80:80"
     volumes:
-      - ./dashboard:/app:ro
+      - ./dashboard:/usr/share/nginx/html
     depends_on:
       - php-server
     networks:

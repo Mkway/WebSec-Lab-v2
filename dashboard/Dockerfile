@@ -7,10 +7,6 @@ RUN apk update && apk add --no-cache curl && rm -rf /var/cache/apk/*
 # Nginx 설정 파일 복사
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Simple Dashboard 파일들 복사
-COPY index.html /usr/share/nginx/html/
-COPY css/ /usr/share/nginx/html/css/
-COPY js/ /usr/share/nginx/html/js/
 
 # 포트 노출
 EXPOSE 80

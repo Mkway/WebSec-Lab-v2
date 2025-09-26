@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS 전용 테스트 - WebSec-Lab v2</title>
+    <script>
+        // CSS 캐싱 방지
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `css/style.css?v=${Date.now()}`;
+        document.head.appendChild(link);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔥 XSS 전용 테스트 플랫폼</h1>
+            <p>Cross-Site Scripting 취약점 심화 학습 및 테스트</p>
+            <a href="index.html" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; margin-top: 10px; display: inline-block;">← 메인 대시보드로 돌아가기</a>
+        </header>
+
+        <!-- XSS 이론 섹션 -->
+        <div class="vulnerability-theory">
+            <div class="theory-header">
+                <span class="theory-icon">🔥</span>
+                <h2 class="theory-title">XSS 취약점 완전 가이드</h2>
+            </div>
+
+            <div class="vulnerability-diagram">
+                <h3>🎯 XSS 공격 유형별 분류</h3>
+
+                <div class="attack-vector">
+                    <h4>1. 반사형 XSS (Reflected XSS)</h4>
+                    <p>사용자 입력이 즉시 응답에 반영되는 형태</p>
+                    <div class="attack-flow">
+                        <div class="flow-step">악성 링크 클릭</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">서버 처리</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">스크립트 실행</div>
+                    </div>
+                </div>
+
+                <div class="attack-vector">
+                    <h4>2. 저장형 XSS (Stored XSS)</h4>
+                    <p>악성 스크립트가 데이터베이스에 저장되어 지속적으로 실행</p>
+                    <div class="attack-flow">
+                        <div class="flow-step">게시물 작성</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">DB 저장</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">페이지 조회</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">스크립트 실행</div>
+                    </div>
+                </div>
+
+                <div class="attack-vector">
+                    <h4>3. DOM 기반 XSS (DOM-based XSS)</h4>
+                    <p>클라이언트 측 JavaScript에서 DOM 조작을 통해 발생</p>
+                    <div class="attack-flow">
+                        <div class="flow-step">URL 조작</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">JavaScript 처리</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">DOM 조작</div>
+                        <span class="flow-arrow">➡️</span>
+                        <div class="flow-step">스크립트 실행</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- XSS 페이로드 라이브러리 -->
+        <div class="main-content" style="max-width: none;">
+            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); margin: 20px 0;">
+                <h2>🎯 XSS 페이로드 라이브러리</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+                    <div class="attack-vector">
+                        <h4>기본 스크립트 태그</h4>
+                        <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+                        <button onclick="testPayload('<script>alert(\\'XSS\\')</script>')">테스트</button>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>이미지 태그 오류</h4>
+                        <code>&lt;img src=x onerror=alert('XSS')&gt;</code>
+                        <button onclick="testPayload('<img src=x onerror=alert(\\'XSS\\')>')">테스트</button>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>SVG 태그</h4>
+                        <code>&lt;svg onload=alert('XSS')&gt;</code>
+                        <button onclick="testPayload('<svg onload=alert(\\'XSS\\')>')">테스트</button>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>JavaScript 프로토콜</h4>
+                        <code>&lt;a href=javascript:alert('XSS')&gt;클릭&lt;/a&gt;</code>
+                        <button onclick="testPayload('<a href=javascript:alert(\\'XSS\\')>클릭</a>')">테스트</button>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>이벤트 핸들러</h4>
+                        <code>&lt;div onclick=alert('XSS')&gt;클릭하세요&lt;/div&gt;</code>
+                        <button onclick="testPayload('<div onclick=alert(\\'XSS\\')>클릭하세요</div>')">테스트</button>
+                    </div>
+
+                    <div class="attack-vector">
+                        <h4>인라인 스타일</h4>
+                        <code>&lt;div style=width:expression(alert('XSS'))&gt;</code>
+                        <button onclick="testPayload('<div style=width:expression(alert(\\'XSS\\'))>')">테스트</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>🔬 실시간 XSS 테스트</h3>
+                    <div style="display: flex; gap: 15px; align-items: center; margin: 15px 0;">
+                        <textarea id="custom-payload" placeholder="커스텀 XSS 페이로드를 입력하세요" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-family: monospace;">&lt;script&gt;alert('Custom XSS')&lt;/script&gt;</textarea>
+                        <button onclick="testCustomPayload()" style="padding: 12px 20px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer;">실행</button>
+                    </div>
+
+                    <div id="xss-result" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8; display: none;">
+                        <strong>실행 결과:</strong>
+                        <div id="xss-output"></div>
+                    </div>
+                </div>
+
+                <!-- 모든 언어 동시 테스트 -->
+                <div style="margin-top: 30px;">
+                    <button id="test-all-btn" onclick="testAllLanguages()" class="test-button" style="width: 100%;">
+                        🌍 모든 언어에서 XSS 테스트 실행
+                    </button>
+
+                    <div id="loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        모든 언어에서 XSS 테스트를 실행하고 있습니다...
+                    </div>
+
+                    <div id="results" class="results-section" style="display: none;">
+                        <h3>📊 XSS 테스트 결과</h3>
+                        <div id="results-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 브라우저 캐싱 방지를 위한 동적 스크립트 로딩
+        const timestamp = Date.now();
+        const scripts = [
+            'js/vulnerability-renderer.js',
+            'js/comparison-renderer.js',
+            'js/app.js'
+        ];
+
+        scripts.forEach(src => {
+            const script = document.createElement('script');
+            script.src = `${src}?v=${timestamp}`;
+            document.head.appendChild(script);
+        });
+
+        // 페이로드 테스트 함수
+        function testPayload(payload) {
+            document.getElementById('custom-payload').value = payload;
+            testCustomPayload();
+        }
+
+        // 커스텀 페이로드 테스트
+        function testCustomPayload() {
+            const payload = document.getElementById('custom-payload').value;
+            const resultDiv = document.getElementById('xss-result');
+            const outputDiv = document.getElementById('xss-output');
+
+            resultDiv.style.display = 'block';
+            outputDiv.innerHTML = '';
+
+            try {
+                // XSS 실행 시뮬레이션
+                outputDiv.innerHTML = `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0;">
+                        <strong>페이로드:</strong> <code>${escapeHtml(payload)}</code>
+                    </div>
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7; margin: 10px 0;">
+                        <strong>⚠️ 시뮬레이션 실행:</strong> 실제 환경에서는 다음과 같이 실행됩니다:
+                        <div style="margin-top: 10px; font-family: monospace; background: white; padding: 10px; border-radius: 4px;">
+                            ${payload}
+                        </div>
+                    </div>
+                `;
+
+                // 실제 XSS 실행 (안전한 환경에서만)
+                if (payload.includes('alert')) {
+                    setTimeout(() => {
+                        try {
+                            if (payload.includes('<script>')) {
+                                const scriptContent = payload.match(/<script[^>]*>(.*?)<\/script>/i)?.[1];
+                                if (scriptContent) {
+                                    eval(scriptContent);
+                                }
+                            } else if (payload.includes('onerror')) {
+                                const onErrorContent = payload.match(/onerror\s*=\s*['"](.*?)['"]/i)?.[1];
+                                if (onErrorContent) {
+                                    eval(onErrorContent);
+                                }
+                            } else if (payload.includes('onload')) {
+                                const onLoadContent = payload.match(/onload\s*=\s*['"](.*?)['"]/i)?.[1];
+                                if (onLoadContent) {
+                                    eval(onLoadContent);
+                                }
+                            }
+                        } catch (error) {
+                            console.log('XSS 실행 중 오류:', error);
+                        }
+                    }, 500);
+                }
+
+            } catch (error) {
+                outputDiv.innerHTML = `<div style="color: #dc3545;">오류: ${error.message}</div>`;
+            }
+        }
+
+        // HTML 이스케이프 함수
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 모든 언어 테스트 실행 (app.js에서 가져온 함수 사용)
+        function testAllLanguages() {
+            // XSS 취약점으로 설정
+            currentVulnerability = 'xss';
+
+            // 커스텀 페이로드 사용
+            const payload = document.getElementById('custom-payload').value;
+            if (!elements.xssPayload) {
+                // elements가 아직 초기화되지 않았을 수 있으므로 직접 설정
+                setTimeout(() => {
+                    const xssPayloadElement = document.createElement('input');
+                    xssPayloadElement.value = payload;
+                    elements = elements || {};
+                    elements.xssPayload = xssPayloadElement;
+                    elements.loading = document.getElementById('loading');
+                    elements.results = document.getElementById('results');
+                    elements.resultsContent = document.getElementById('results-content');
+
+                    runTest();
+                }, 100);
+            } else {
+                elements.xssPayload.value = payload;
+                runTest();
+            }
+        }
+    </script>
+</body>
+</html>
