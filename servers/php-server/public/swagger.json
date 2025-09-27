@@ -1,0 +1,140 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "WebSec-Lab PHP API",
+        "description": "PHP 서버의 취약점 테스트 API",
+        "version": "2.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "PHP Development Server"
+        }
+    ],
+    "paths": {
+        "/health": {
+            "get": {
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "Server is healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {"type": "string"},
+                                        "server": {"type": "string"},
+                                        "timestamp": {"type": "string"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sql-injection/vulnerable": {
+            "post": {
+                "summary": "SQL Injection vulnerable endpoint",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {"type": "string"},
+                                    "password": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Response from vulnerable endpoint",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {"type": "object"},
+                                        "metadata": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sql-injection/safe": {
+            "post": {
+                "summary": "SQL Injection safe endpoint",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {"type": "string"},
+                                    "password": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Response from safe endpoint"
+                    }
+                }
+            }
+        },
+        "/api/xss/vulnerable": {
+            "post": {
+                "summary": "XSS vulnerable endpoint",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "payload": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Response from XSS vulnerable endpoint"
+                    }
+                }
+            }
+        },
+        "/api/xss/safe": {
+            "post": {
+                "summary": "XSS safe endpoint",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "payload": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Response from XSS safe endpoint"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -9,7 +9,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use WebSecLab\Controllers\VulnerabilityController;
 use WebSecLab\Controllers\XSSController;
 use WebSecLab\Controllers\HealthController;
-use WebSecLab\Controllers\SwaggerController;
 use WebSecLab\Utils\DatabaseManager;
 
 // CORS 헤더 설정
@@ -46,15 +45,14 @@ try {
             break;
 
         case 'swagger.json':
-            $swaggerController = new SwaggerController();
-            echo $swaggerController->generateSwaggerJson();
+            header('Content-Type: application/json');
+            echo file_get_contents(__DIR__ . '/swagger.json');
             break;
 
         case 'swagger-ui':
         case 'docs':
-            $swaggerController = new SwaggerController();
             header('Content-Type: text/html');
-            echo $swaggerController->serveSwaggerUI();
+            echo file_get_contents(__DIR__ . '/swagger-ui.html');
             break;
 
         case 'xss':

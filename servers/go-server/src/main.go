@@ -16,8 +16,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/websec-lab/websec-lab-v2/go-server/sqlinjection"
 )
 
@@ -59,8 +57,233 @@ func main() {
 		c.Next()
 	})
 
-	// Swagger endpoint
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Static swagger.json endpoint (alternative route)
+	r.GET("/api-docs/swagger.json", func(c *gin.Context) {
+		swaggerJSON := `{
+  "swagger": "2.0",
+  "info": {
+    "title": "WebSec-Lab Go API",
+    "description": "Go Web Security Testing Platform",
+    "version": "2.0.0"
+  },
+  "host": "localhost:8082",
+  "basePath": "/",
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json", "text/html"],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Check if the server is running and healthy",
+        "tags": ["Health"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string"},
+                "service": {"type": "string"},
+                "timestamp": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Server Information",
+        "description": "Get basic server information and available endpoints",
+        "tags": ["Information"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "Server information",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {"type": "string"},
+                "version": {"type": "string"},
+                "endpoints": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/xss/vulnerable": {
+      "get": {
+        "summary": "XSS Vulnerable Test",
+        "description": "Vulnerable endpoint for Cross-Site Scripting (XSS) testing",
+        "tags": ["XSS"],
+        "produces": ["text/html"],
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "description": "Input to test XSS vulnerability",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML response with unescaped input",
+            "schema": {"type": "string"}
+          }
+        }
+      }
+    },
+    "/xss/safe": {
+      "get": {
+        "summary": "XSS Safe Test",
+        "description": "Safe endpoint with proper XSS protection",
+        "tags": ["XSS"],
+        "produces": ["text/html"],
+        "parameters": [
+          {
+            "name": "input",
+            "in": "query",
+            "description": "Input to test (will be safely escaped)",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML response with escaped input",
+            "schema": {"type": "string"}
+          }
+        }
+      }
+    },
+    "/vulnerabilities/sql-injection": {
+      "post": {
+        "summary": "SQL Injection Test",
+        "description": "Test SQL injection vulnerability",
+        "tags": ["Vulnerabilities"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": ["vulnerable", "safe"],
+                  "description": "Test mode"
+                },
+                "username": {
+                  "type": "string",
+                  "description": "Username for login attempt"
+                },
+                "password": {
+                  "type": "string",
+                  "description": "Password for login attempt"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test result",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {"type": "boolean"},
+                "data": {"type": "object"},
+                "metadata": {"type": "object"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vulnerabilities/xss": {
+      "post": {
+        "summary": "XSS Test",
+        "description": "Test XSS vulnerability",
+        "tags": ["Vulnerabilities"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": ["vulnerable", "safe"],
+                  "description": "Test mode"
+                },
+                "payload": {
+                  "type": "string",
+                  "description": "XSS payload to test"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test result",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {"type": "boolean"},
+                "data": {"type": "object"},
+                "metadata": {"type": "object"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}`
+
+		c.Header("Content-Type", "application/json")
+		c.String(http.StatusOK, swaggerJSON)
+	})
+
+	// Simple Swagger UI endpoint
+	r.GET("/swagger/index.html", func(c *gin.Context) {
+		swaggerHTML := `<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSec-Lab Go API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@3.25.0/swagger-ui.css" />
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@3.25.0/swagger-ui-bundle.js"></script>
+    <script>
+    SwaggerUIBundle({
+        url: '/api-docs/swagger.json',
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis]
+    });
+    </script>
+</body>
+</html>`
+
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, swaggerHTML)
+	})
 
 	// Routes
 	// @Summary Health Check

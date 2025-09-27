@@ -1,0 +1,245 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "WebSec-Lab Go API",
+        "description": "Go Web Security Testing Platform",
+        "version": "2.0.0"
+    },
+    "host": "localhost:8082",
+    "basePath": "/",
+    "schemes": ["http"],
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+    "paths": {
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "Check if the server is running and healthy",
+                "tags": ["Health"],
+                "responses": {
+                    "200": {
+                        "description": "Server is healthy",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "status": {"type": "string"},
+                                "service": {"type": "string"},
+                                "timestamp": {"type": "string"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Server Information",
+                "description": "Get basic server information and available endpoints",
+                "tags": ["Information"],
+                "responses": {
+                    "200": {
+                        "description": "Server information",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {"type": "string"},
+                                "version": {"type": "string"},
+                                "endpoints": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/xss/vulnerable": {
+            "get": {
+                "summary": "XSS - Vulnerable Endpoint",
+                "description": "Vulnerable endpoint for Cross-Site Scripting (XSS) testing",
+                "tags": ["XSS"],
+                "parameters": [
+                    {
+                        "name": "input",
+                        "in": "query",
+                        "description": "Input to test XSS vulnerability",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": ["text/html"],
+                "responses": {
+                    "200": {
+                        "description": "HTML response with unescaped input",
+                        "schema": {"type": "string"}
+                    }
+                }
+            }
+        },
+        "/xss/safe": {
+            "get": {
+                "summary": "XSS - Safe Endpoint",
+                "description": "Safe endpoint with proper XSS protection",
+                "tags": ["XSS"],
+                "parameters": [
+                    {
+                        "name": "input",
+                        "in": "query",
+                        "description": "Input to test (will be safely escaped)",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "produces": ["text/html"],
+                "responses": {
+                    "200": {
+                        "description": "HTML response with escaped input",
+                        "schema": {"type": "string"}
+                    }
+                }
+            }
+        },
+        "/sql/vulnerable/login": {
+            "get": {
+                "summary": "SQL Injection - Vulnerable Login",
+                "description": "Vulnerable endpoint for SQL injection testing",
+                "tags": ["SQL Injection"],
+                "parameters": [
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "description": "Username for login attempt",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "description": "Password for login attempt",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login attempt result",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {"type": "boolean"},
+                                "data": {"type": "object"},
+                                "metadata": {"type": "object"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sql/safe/login": {
+            "get": {
+                "summary": "SQL Injection - Safe Login",
+                "description": "Safe endpoint with SQL injection protection",
+                "tags": ["SQL Injection"],
+                "parameters": [
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "description": "Username for login attempt",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "password",
+                        "in": "query",
+                        "description": "Password for login attempt",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Safe login attempt result",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {"type": "boolean"},
+                                "data": {"type": "object"},
+                                "metadata": {"type": "object"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vulnerabilities/sql-injection": {
+            "post": {
+                "summary": "SQL Injection Test",
+                "description": "Test SQL injection vulnerability",
+                "tags": ["Vulnerabilities"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "mode": {"type": "string", "enum": ["vulnerable", "safe"]},
+                                "username": {"type": "string"},
+                                "password": {"type": "string"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test result",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {"type": "boolean"},
+                                "data": {"type": "object"},
+                                "metadata": {"type": "object"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vulnerabilities/xss": {
+            "post": {
+                "summary": "XSS Test",
+                "description": "Test XSS vulnerability",
+                "tags": ["Vulnerabilities"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "mode": {"type": "string", "enum": ["vulnerable", "safe"]},
+                                "payload": {"type": "string"}
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test result",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {"type": "boolean"},
+                                "data": {"type": "object"},
+                                "metadata": {"type": "object"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
