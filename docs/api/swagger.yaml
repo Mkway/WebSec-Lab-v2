@@ -1,0 +1,515 @@
+openapi: 3.0.0
+info:
+  title: WebSec-Lab API
+  version: 2.0.0
+  description: Multi-language Web Security Testing Platform
+  contact:
+    name: WebSec-Lab Team
+    url: https://github.com/websec-lab
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: PHP Server
+  - url: http://localhost:3000
+    description: Node.js Server
+  - url: http://localhost:5000
+    description: Python Server
+  - url: http://localhost:8081
+    description: Java Server
+  - url: http://localhost:8082
+    description: Go Server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the server is running and healthy
+      tags:
+        - Health
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /:
+    get:
+      summary: Server Information
+      description: Get basic server information and available endpoints
+      tags:
+        - Information
+      responses:
+        '200':
+          $ref: '#/components/responses/ServerInfoResponse'
+
+  /vulnerabilities:
+    get:
+      summary: List Available Vulnerabilities
+      description: Get a list of all supported vulnerability types
+      tags:
+        - Vulnerabilities
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityListResponse'
+
+  /vulnerabilities/{type}:
+    post:
+      summary: Execute Vulnerability Test
+      description: Execute a specific vulnerability test with given payload
+      tags:
+        - Vulnerabilities
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: Type of vulnerability to test
+          schema:
+            type: string
+            enum: [sql-injection, xss, command-injection]
+      requestBody:
+        $ref: '#/components/requestBodies/VulnerabilityTest'
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /sql/vulnerable/login:
+    get:
+      summary: SQL Injection - Vulnerable Login
+      description: Vulnerable login endpoint for SQL injection testing
+      tags:
+        - SQL Injection
+      parameters:
+        - name: username
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: password
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+    post:
+      summary: SQL Injection - Vulnerable Login (POST)
+      description: Vulnerable login endpoint for SQL injection testing via POST
+      tags:
+        - SQL Injection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+  /sql/safe/login:
+    get:
+      summary: SQL Injection - Safe Login
+      description: Safe login endpoint with proper SQL injection protection
+      tags:
+        - SQL Injection
+      parameters:
+        - name: username
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: password
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+    post:
+      summary: SQL Injection - Safe Login (POST)
+      description: Safe login endpoint with proper SQL injection protection via POST
+      tags:
+        - SQL Injection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+  /xss/vulnerable:
+    get:
+      summary: XSS - Vulnerable Endpoint
+      description: Vulnerable endpoint for Cross-Site Scripting (XSS) testing
+      tags:
+        - XSS
+      parameters:
+        - name: input
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+    post:
+      summary: XSS - Vulnerable Endpoint (POST)
+      description: Vulnerable endpoint for Cross-Site Scripting (XSS) testing via POST
+      tags:
+        - XSS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+  /xss/safe:
+    get:
+      summary: XSS - Safe Endpoint
+      description: Safe endpoint with proper XSS protection
+      tags:
+        - XSS
+      parameters:
+        - name: input
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+    post:
+      summary: XSS - Safe Endpoint (POST)
+      description: Safe endpoint with proper XSS protection via POST
+      tags:
+        - XSS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/VulnerabilityResult'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the request was successful
+        data:
+          type: object
+          description: Response data
+        metadata:
+          type: object
+          properties:
+            language:
+              type: string
+              enum: [php, nodejs, python, java, go]
+            vulnerability_type:
+              type: string
+            mode:
+              type: string
+              enum: [vulnerable, safe]
+            timestamp:
+              type: string
+              format: date-time
+
+    VulnerabilityData:
+      type: object
+      properties:
+        result:
+          type: string
+          description: Execution result
+        vulnerability_detected:
+          type: boolean
+          description: Whether vulnerability was detected
+        payload_used:
+          type: string
+          description: Test payload that was used
+        attack_success:
+          type: boolean
+          description: Whether the attack was successful
+        execution_time:
+          type: string
+          description: Time taken to execute the test
+
+    HealthData:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        uptime:
+          type: string
+        version:
+          type: string
+
+    ServerInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        language:
+          type: string
+        port:
+          type: integer
+        available_endpoints:
+          type: array
+          items:
+            type: string
+
+    VulnerabilityList:
+      type: object
+      properties:
+        vulnerabilities:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              endpoints:
+                type: array
+                items:
+                  type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+
+  requestBodies:
+    VulnerabilityTest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              mode:
+                type: string
+                enum: [vulnerable, safe]
+                default: vulnerable
+                description: Test mode - vulnerable or safe implementation
+              payload:
+                type: string
+                description: Test payload to execute
+              params:
+                type: object
+                description: Additional parameters for the test
+            required:
+              - payload
+          examples:
+            sql_injection:
+              summary: SQL Injection Test
+              value:
+                mode: vulnerable
+                payload: "' OR '1'='1"
+                params:
+                  username: "admin"
+                  password: "password"
+            xss_test:
+              summary: XSS Test
+              value:
+                mode: vulnerable
+                payload: "<script>alert('XSS')</script>"
+                params:
+                  input: "test input"
+
+  responses:
+    HealthResponse:
+      description: Health check response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HealthData'
+
+    ServerInfoResponse:
+      description: Server information response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ServerInfo'
+
+    VulnerabilityListResponse:
+      description: List of available vulnerabilities
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VulnerabilityList'
+
+    VulnerabilityResult:
+      description: Vulnerability test result
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/VulnerabilityData'
+          examples:
+            sql_injection_success:
+              summary: Successful SQL Injection
+              value:
+                success: true
+                data:
+                  result: "Login successful - Admin access granted"
+                  vulnerability_detected: true
+                  payload_used: "' OR '1'='1"
+                  attack_success: true
+                  execution_time: "0.045s"
+                metadata:
+                  language: "php"
+                  vulnerability_type: "sql_injection"
+                  mode: "vulnerable"
+                  timestamp: "2024-01-01T00:00:00Z"
+            xss_success:
+              summary: Successful XSS
+              value:
+                success: true
+                data:
+                  result: "<script>alert('XSS')</script>"
+                  vulnerability_detected: true
+                  payload_used: "<script>alert('XSS')</script>"
+                  attack_success: true
+                  execution_time: "0.012s"
+                metadata:
+                  language: "nodejs"
+                  vulnerability_type: "xss"
+                  mode: "vulnerable"
+                  timestamp: "2024-01-01T00:00:00Z"
+            safe_mode:
+              summary: Safe Mode Response
+              value:
+                success: true
+                data:
+                  result: "Input sanitized successfully"
+                  vulnerability_detected: false
+                  payload_used: "<script>alert('XSS')</script>"
+                  attack_success: false
+                  execution_time: "0.008s"
+                metadata:
+                  language: "python"
+                  vulnerability_type: "xss"
+                  mode: "safe"
+                  timestamp: "2024-01-01T00:00:00Z"
+
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  data:
+                    $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Information
+    description: Server information endpoints
+  - name: Vulnerabilities
+    description: Generic vulnerability testing endpoints
+  - name: SQL Injection
+    description: SQL injection testing endpoints
+  - name: XSS
+    description: Cross-Site Scripting testing endpoints

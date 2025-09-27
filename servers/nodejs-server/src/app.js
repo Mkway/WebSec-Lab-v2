@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
 const NoSQLInjection = require('./vulnerabilities/NoSQLInjection');
 
 // Load environment variables
@@ -9,12 +11,65 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Swagger configuration
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'WebSec-Lab Node.js API',
+            version: '2.0.0',
+            description: 'Node.js Web Security Testing Platform'
+        },
+        servers: [
+            {
+                url: `http://localhost:${PORT}`,
+                description: 'Development server'
+            }
+        ]
+    },
+    apis: ['./src/app.js']
+};
+
+const specs = swaggerJsdoc(swaggerOptions);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Swagger UI
+app.use('/swagger-ui', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.get('/swagger.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(specs);
+});
+
 // Basic routes
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health Check
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Server health status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: healthy
+ *                 service:
+ *                   type: string
+ *                   example: websec-nodejs
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 app.get('/health', (req, res) => {
     res.json({
         status: 'healthy',
@@ -23,21 +78,63 @@ app.get('/health', (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Server Information
+ *     tags: [Information]
+ *     responses:
+ *       200:
+ *         description: Basic server information
+ */
 app.get('/', (req, res) => {
     res.json({
         message: 'WebSec-Lab Node.js Server',
         version: '2.0.0',
-        endpoints: ['/health', '/vulnerabilities']
+        endpoints: ['/health', '/vulnerabilities', '/swagger-ui', '/docs']
     });
 });
 
 // XSS Test Endpoints
+/**
+ * @swagger
+ * /xss/vulnerable:
+ *   get:
+ *     summary: XSS - Vulnerable Endpoint
+ *     tags: [XSS]
+ *     parameters:
+ *       - in: query
+ *         name: input
+ *         schema:
+ *           type: string
+ *         description: Input to test XSS vulnerability
+ *     responses:
+ *       200:
+ *         description: XSS vulnerable response (HTML)
+ */
 app.get('/xss/vulnerable', (req, res) => {
     const input = req.query.input || '<script>alert("XSS")</script>';
     // 취약한 코드 - 직접 출력
     res.send(`<h1>User Input: ${input}</h1>`);
 });
 
+/**
+ * @swagger
+ * /xss/safe:
+ *   get:
+ *     summary: XSS - Safe Endpoint
+ *     tags: [XSS]
+ *     parameters:
+ *       - in: query
+ *         name: input
+ *         schema:
+ *           type: string
+ *         description: Input to test (will be safely escaped)
+ *     responses:
+ *       200:
+ *         description: XSS safe response (HTML with escaped input)
+ */
 app.get('/xss/safe', (req, res) => {
     const input = req.query.input || '<script>alert("XSS")</script>';
     // 안전한 코드 - HTML 이스케이프
@@ -175,6 +272,41 @@ app.get('/sql/safe/search', async (req, res) => {
 });
 
 // Standard endpoints for dashboard compatibility
+/**
+ * @swagger
+ * /vulnerabilities/xss:
+ *   post:
+ *     summary: Execute XSS Vulnerability Test
+ *     tags: [Vulnerabilities]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mode:
+ *                 type: string
+ *                 enum: [vulnerable, safe]
+ *                 default: vulnerable
+ *               payload:
+ *                 type: string
+ *                 default: '<script>alert("XSS")</script>'
+ *     responses:
+ *       200:
+ *         description: XSS test result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 metadata:
+ *                   type: object
+ */
 app.post('/vulnerabilities/xss', (req, res) => {
     try {
         const { mode, payload } = req.body;

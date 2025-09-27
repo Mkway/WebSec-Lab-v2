@@ -435,10 +435,12 @@ body {
 
 .server-item {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
+    padding: 15px 0;
     border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .server-name {
@@ -466,6 +468,34 @@ body {
 .status-checking {
     background: #fff3cd;
     color: #856404;
+}
+
+/* Swagger Links in Server Status */
+.swagger-links {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.swagger-link {
+    display: inline-block;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.swagger-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
 }
 
 /* Vulnerability Analysis Styles */

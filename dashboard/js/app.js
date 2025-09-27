@@ -3,11 +3,46 @@
 
 // 서버 정보 설정
 const SERVERS = {
-    php: { port: 8080, name: 'PHP', icon: '🐘' },
-    nodejs: { port: 3000, name: 'Node.js', icon: '🟢' },
-    python: { port: 5000, name: 'Python', icon: '🐍' },
-    java: { port: 8081, name: 'Java', icon: '☕' },
-    go: { port: 8082, name: 'Go', icon: '🔵' }
+    php: {
+        port: 8080,
+        name: 'PHP',
+        icon: '🐘',
+        swaggerUrl: 'http://localhost:8080/swagger-ui',
+        docsUrl: 'http://localhost:8080/docs',
+        jsonUrl: 'http://localhost:8080/swagger.json'
+    },
+    nodejs: {
+        port: 3000,
+        name: 'Node.js',
+        icon: '🟢',
+        swaggerUrl: 'http://localhost:3000/swagger-ui',
+        docsUrl: 'http://localhost:3000/docs',
+        jsonUrl: 'http://localhost:3000/swagger.json'
+    },
+    python: {
+        port: 5000,
+        name: 'Python',
+        icon: '🐍',
+        swaggerUrl: 'http://localhost:5000/docs',
+        docsUrl: 'http://localhost:5000/',
+        jsonUrl: 'http://localhost:5000/swagger.json'
+    },
+    java: {
+        port: 8081,
+        name: 'Java',
+        icon: '☕',
+        swaggerUrl: 'http://localhost:8081/swagger-ui/index.html',
+        docsUrl: 'http://localhost:8081/',
+        jsonUrl: 'http://localhost:8081/v3/api-docs'
+    },
+    go: {
+        port: 8082,
+        name: 'Go',
+        icon: '🔵',
+        swaggerUrl: 'http://localhost:8082/swagger/index.html',
+        docsUrl: 'http://localhost:8082/',
+        jsonUrl: 'http://localhost:8082/swagger/doc.json'
+    }
 };
 
 // 페이로드 데이터
@@ -459,6 +494,13 @@ async function checkServerStatus() {
                 <div class="status-indicator ${statusClass}">
                     ${statusText}
                 </div>
+                ${result.status === 'running' ? `
+                    <div class="swagger-links">
+                        <a href="${SERVERS[result.key].swaggerUrl}" target="_blank" class="swagger-link" title="Swagger UI 열기">
+                            📖 API 문서
+                        </a>
+                    </div>
+                ` : ''}
             </div>
         `;
     });

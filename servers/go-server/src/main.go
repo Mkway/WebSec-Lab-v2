@@ -1,3 +1,8 @@
+// @title WebSec-Lab Go API
+// @version 2.0.0
+// @description Go Web Security Testing Platform
+// @host localhost:8082
+// @BasePath /
 package main
 
 import (
@@ -11,6 +16,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/websec-lab/websec-lab-v2/go-server/sqlinjection"
 )
 
@@ -52,7 +59,16 @@ func main() {
 		c.Next()
 	})
 
+	// Swagger endpoint
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// Routes
+	// @Summary Health Check
+	// @Description Check if the server is running and healthy
+	// @Tags Health
+	// @Produce json
+	// @Success 200 {object} map[string]interface{}
+	// @Router /health [get]
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
@@ -61,15 +77,28 @@ func main() {
 		})
 	})
 
+	// @Summary Server Information
+	// @Description Get basic server information and available endpoints
+	// @Tags Information
+	// @Produce json
+	// @Success 200 {object} map[string]interface{}
+	// @Router / [get]
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message":   "WebSec-Lab Go Server",
 			"version":   "2.0.0",
-			"endpoints": []string{"/health", "/xss/vulnerable", "/xss/safe", "/sql/vulnerable/login", "/sql/safe/login", "/sql/vulnerable/search", "/sql/safe/search"},
+			"endpoints": []string{"/health", "/swagger/index.html", "/xss/vulnerable", "/xss/safe", "/sql/vulnerable/login", "/sql/safe/login", "/sql/vulnerable/search", "/sql/safe/search"},
 		})
 	})
 
 	// XSS Test Endpoints
+	// @Summary XSS - Vulnerable Endpoint
+	// @Description Vulnerable endpoint for Cross-Site Scripting (XSS) testing
+	// @Tags XSS
+	// @Param input query string false "Input to test XSS vulnerability"
+	// @Produce html
+	// @Success 200 {string} string "HTML response with unescaped input"
+	// @Router /xss/vulnerable [get]
 	r.GET("/xss/vulnerable", func(c *gin.Context) {
 		input := c.DefaultQuery("input", "<script>alert('XSS')</script>")
 		// 취약한 코드 - 직접 출력
@@ -77,6 +106,13 @@ func main() {
 		c.String(http.StatusOK, "<h1>User Input: %s</h1>", input)
 	})
 
+	// @Summary XSS - Safe Endpoint
+	// @Description Safe endpoint with proper XSS protection
+	// @Tags XSS
+	// @Param input query string false "Input to test (will be safely escaped)"
+	// @Produce html
+	// @Success 200 {string} string "HTML response with escaped input"
+	// @Router /xss/safe [get]
 	r.GET("/xss/safe", func(c *gin.Context) {
 		input := c.DefaultQuery("input", "<script>alert('XSS')</script>")
 		// 안전한 코드 - HTML 이스케이프

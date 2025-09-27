@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_restx import Api, Resource, fields
 import os
 import html
 from datetime import datetime
@@ -17,71 +18,106 @@ CORS(app)
 # Configuration
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
+# Flask-RESTX API setup
+api = Api(
+    app,
+    doc='/docs/',
+    title='WebSec-Lab Python API',
+    version='2.0.0',
+    description='Python Web Security Testing Platform'
+)
+
 # Initialize vulnerability modules
 sql_injection = SQLInjection()
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'service': 'websec-python',
-        'timestamp': datetime.now().isoformat()
-    })
+# API Models
+vulnerability_test_model = api.model('VulnerabilityTest', {
+    'mode': fields.String(required=True, enum=['vulnerable', 'safe'], default='vulnerable'),
+    'payload': fields.String(required=True),
+    'parameters': fields.Raw()
+})
 
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({
-        'message': 'WebSec-Lab Python Server',
-        'version': '2.0.0',
-        'endpoints': ['/health', '/vulnerabilities']
-    })
+api_response_model = api.model('ApiResponse', {
+    'success': fields.Boolean,
+    'data': fields.Raw,
+    'metadata': fields.Raw
+})
 
-# XSS Test Endpoints
-@app.route('/vulnerabilities/xss', methods=['POST'])
-def xss_test():
-    try:
-        data = request.get_json()
-        print(f"[DEBUG] Received data: {data}")
-        payload = data.get('payload', '<script>alert("XSS")</script>')
-        mode = data.get('mode', 'vulnerable')
-        print(f"[DEBUG] Payload: {payload}, Mode: {mode}")
+# Swagger documentation for additional endpoints
+@app.route('/swagger.json')
+def swagger_spec():
+    return jsonify(api.__schema__)
 
-        if mode == 'vulnerable':
-            # 취약한 코드 - 직접 출력
-            result = f'<h1>User Input: {payload}</h1>'
-            attack_success = '<script>' in payload or 'javascript:' in payload
-        else:
-            # 안전한 코드 - HTML 이스케이프
-            safe_input = html.escape(payload)
-            result = f'<h1>User Input: {safe_input}</h1>'
-            attack_success = False
+@api.route('/health')
+class HealthAPI(Resource):
+    def get(self):
+        """Health Check"""
+        return {
+            'status': 'healthy',
+            'service': 'websec-python',
+            'timestamp': datetime.now().isoformat()
+        }
 
-        return jsonify({
-            'success': True,
-            'data': {
-                'result': result,
-                'vulnerability_detected': attack_success,
-                'payload_used': payload,
-                'attack_success': attack_success,
-                'execution_time': '0.001s'
-            },
-            'metadata': {
-                'language': 'python',
-                'vulnerability_type': 'xss',
-                'mode': mode,
-                'timestamp': datetime.now().isoformat()
+@api.route('/')
+class HomeAPI(Resource):
+    def get(self):
+        """Server Information"""
+        return {
+            'message': 'WebSec-Lab Python Server',
+            'version': '2.0.0',
+            'endpoints': ['/health', '/vulnerabilities', '/docs', '/swagger.json']
+        }
+
+# XSS Test Endpoints using Flask-RESTX
+@api.route('/vulnerabilities/xss')
+class XSSAPI(Resource):
+    @api.expect(vulnerability_test_model)
+    @api.marshal_with(api_response_model)
+    def post(self):
+        """Execute XSS Vulnerability Test"""
+        try:
+            data = request.get_json()
+            print(f"[DEBUG] Received data: {data}")
+            payload = data.get('payload', '<script>alert("XSS")</script>')
+            mode = data.get('mode', 'vulnerable')
+            print(f"[DEBUG] Payload: {payload}, Mode: {mode}")
+
+            if mode == 'vulnerable':
+                # 취약한 코드 - 직접 출력
+                result = f'<h1>User Input: {payload}</h1>'
+                attack_success = '<script>' in payload or 'javascript:' in payload
+            else:
+                # 안전한 코드 - HTML 이스케이프
+                safe_input = html.escape(payload)
+                result = f'<h1>User Input: {safe_input}</h1>'
+                attack_success = False
+
+            return {
+                'success': True,
+                'data': {
+                    'result': result,
+                    'vulnerability_detected': attack_success,
+                    'payload_used': payload,
+                    'attack_success': attack_success,
+                    'execution_time': '0.001s'
+                },
+                'metadata': {
+                    'language': 'python',
+                    'vulnerability_type': 'xss',
+                    'mode': mode,
+                    'timestamp': datetime.now().isoformat()
+                }
             }
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'metadata': {
-                'language': 'python',
-                'vulnerability_type': 'xss',
-                'mode': mode
-            }
-        }), 500
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'metadata': {
+                    'language': 'python',
+                    'vulnerability_type': 'xss',
+                    'mode': mode
+                }
+            }, 500
 
 @app.route('/xss/vulnerable', methods=['GET'])
 def xss_vulnerable():
